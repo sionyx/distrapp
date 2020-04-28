@@ -51,7 +51,7 @@ struct BrunchController {
     // http://localhost:8080/download/PULSAR-1234
     func download(_ req: Request) throws -> EventLoopFuture<Response> {
         guard let tag = req.parameters.get("tag") else {
-            return req.eventLoop.makeSucceededFuture(Response(status: .notFound))
+            return req.eventLoop.makeSucceededFuture(Response(status: .badRequest))
         }
 
         let responseResult = Brunch.query(on: req.db)
@@ -59,7 +59,7 @@ struct BrunchController {
             .first()
             .flatMap { brunch -> EventLoopFuture<Response> in
                 guard let filename = brunch?.filename else {
-                        return req.eventLoop.makeSucceededFuture(Response(status: .badRequest))
+                        return req.eventLoop.makeSucceededFuture(Response(status: .notFound))
                 }
 
                 let filePath = URL(fileURLWithPath: "./\(tag)/\(filename)")
@@ -151,5 +151,61 @@ struct BrunchController {
             }
         }
         return requestResult.futureResult
+    }
+
+    // http://localhost:8080/install/PULSAR-1234
+    func install(_ req: Request) throws -> EventLoopFuture<Response> {
+        guard let tag = req.parameters.get("tag"),
+            let host = req.headers.first(name: "Host") else {
+            return req.eventLoop.makeSucceededFuture(Response(status: .badRequest))
+        }
+
+        let responseResult = Brunch.query(on: req.db)
+            .filter(\.$tag == tag)
+            .first()
+            .flatMap { brunch -> EventLoopFuture<Response> in
+                guard let brunch = brunch else {
+                        return req.eventLoop.makeSucceededFuture(Response(status: .notFound))
+                }
+
+                // <a href="itms-services://?action=download-manifest&url=https://your.domain.com/your-app/manifest.plist">Awesome App</a>
+                let response = req.redirect(to: "itms-services://?action=download-manifest&url=https://\(host)/install/\(brunch.tag)/manifest.plist", type: .temporary)
+                return req.eventLoop.makeSucceededFuture(response)
+            }
+
+        return responseResult
+    }
+
+
+    // http://localhost:8080/install/PULSAR-1234/manifest.plist
+    func installManifest(_ req: Request) throws -> EventLoopFuture<Response> {
+        guard let tag = req.parameters.get("tag"),
+        let host = req.headers.first(name: "Host") else {
+            return req.eventLoop.makeSucceededFuture(Response(status: .badRequest))
+        }
+
+        let responseResult = Brunch.query(on: req.db)
+            .filter(\.$tag == tag)
+            .first()
+            .flatMap { brunch -> EventLoopFuture<Response> in
+                guard let filename = brunch?.filename else {
+                        return req.eventLoop.makeSucceededFuture(Response(status: .notFound))
+                }
+
+                let manifestTemplate = R.manifest
+                let manifest = manifestTemplate
+                    .replacingOccurrences(of: "${DOMAIN}", with: host)
+                    .replacingOccurrences(of: "${BRANCH_TAG}", with: tag)
+                    .replacingOccurrences(of: "${FILE_NAME}", with: filename)
+                    .replacingOccurrences(of: "${BUNDLE_IDENTIFIER}", with: "ru.mail.channel-alpha")
+                    .replacingOccurrences(of: "${APPLICATION_VERSION}", with: "1.0")
+                    .replacingOccurrences(of: "${DISPLAY_NAME}", with: "channel-alpha")
+
+                let response = Response(status: .ok, body: Response.Body(string: manifest))
+
+                return req.eventLoop.makeSucceededFuture(response)
+            }
+
+        return responseResult
     }
 }

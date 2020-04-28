@@ -14,6 +14,9 @@ func routes(_ app: Application) throws {
     app.on(.GET, "branches", use: brunchesController.index)
     app.on(.POST, "upload", ":tag", ":filename", body: .stream, use: brunchesController.upload)
     app.on(.GET, "download", ":tag", use: brunchesController.download)
+    app.on(.GET, "download", ":tag", ":filename", use: brunchesController.download)
+    app.on(.GET, "install", ":tag", use: brunchesController.install)
+    app.on(.GET, "install", ":tag", "manifest.plist", use: brunchesController.installManifest)
 
 //    app.get("branch", Brunch.parameter, use: brunchesController.one)
 //    app.get("new", use: brunchesController.createNew)
