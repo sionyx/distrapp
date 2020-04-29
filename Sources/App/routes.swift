@@ -10,21 +10,14 @@ func routes(_ app: Application) throws {
         return "Hello, world!"
     }
 
-    let brunchesController = BrunchController()
-    app.on(.GET, "branches", use: brunchesController.index)
-    app.on(.POST, "upload", ":tag", ":filename", body: .stream, use: brunchesController.upload)
-    app.on(.GET, "download", ":tag", use: brunchesController.download)
-    app.on(.GET, "download", ":tag", ":filename", use: brunchesController.download)
-    app.on(.GET, "install", ":tag", use: brunchesController.install)
-    app.on(.GET, "install", ":tag", "manifest.plist", use: brunchesController.installManifest)
+    let branchesController = BranchController()
+    app.on(.GET, "branches", use: branchesController.index)
+    app.on(.GET, "branch", ":tag", use: branchesController.one)
+    app.on(.DELETE, "branch", ":tag", use: branchesController.delete)
 
-//    app.get("branch", Brunch.parameter, use: brunchesController.one)
-//    app.get("new", use: brunchesController.createNew)
-//    app.post("branches", use: brunchesController.create)
-//    app.post("upload", use: brunchesController.upload)
-
-
-    //    router.get("download", String.parameter, String.parameter, use: todoController.download)
-    //    router.get("download", use: todoController.download)
-    //app.delete("branches", Brunch.parameter, use: brunchesController.delete)
+    app.on(.POST, "upload", ":tag", ":filename", body: .stream, use: branchesController.upload)
+    app.on(.GET, "download", ":tag", use: branchesController.download)
+    app.on(.GET, "download", ":tag", ":filename", use: branchesController.download)
+    app.on(.GET, "install", ":tag", use: branchesController.install)
+    app.on(.GET, "install", ":tag", "manifest.plist", use: branchesController.installManifest)
 }

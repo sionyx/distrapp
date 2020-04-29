@@ -1,7 +1,7 @@
 import Fluent
 import Vapor
 
-final class Brunch: Model, Content {
+final class Branch: Model, Content {
     static let schema = "brunches"
     
     @ID(key: .id)

@@ -1,76 +1,69 @@
 import Fluent
 import Vapor
 
-struct BrunchController {
+struct BranchController {
     // http://localhost:8080/branches
-    func index(req: Request) throws -> EventLoopFuture<[Brunch]> {
-        return Brunch.query(on: req.db).all()
+    func index(req: Request) throws -> EventLoopFuture<[Branch]> {
+        return Branch.query(on: req.db).all()
     }
 
-    // http://localhost:8080/branch/PULSAR-3456
-//    func one(req: Request) throws -> EventLoopFuture<Brunch> {
-//        return try req.parameters.next(Brunch.self).flatMap { brunch in
-//            return brunch.save(on: req)
-//        }
-//        //return Brunch.query(on: req).all()
-//    }
+    // http://localhost:8080/branch/PULSAR-1234
+    func one(req: Request) throws -> EventLoopFuture<Branch> {
+        guard let tag = req.parameters.get("tag") else {
+            throw Abort(.badRequest)
+        }
 
-//    func create(req: Request) throws -> EventLoopFuture<Brunch> {
-//        let brunch = try req.content.decode(Brunch.self)
-//        return brunch.save(on: req.db).map { brunch }
-//    }
+        let responseResult = Branch.query(on: req.db)
+            .filter(\.$tag == tag)
+            .first()
+            .unwrap(or: Abort(.notFound))
 
+        return responseResult
+    }
 
-    // http://localhost:8080/new?tag=PULSAR-3456&filename=app.ipa
-//    func createNew(req: Request) throws -> EventLoopFuture<Brunch> {
-////        let tagString = try req.query.get(String.self, at: "tag")
-////        let filenameString = try req.query.get(String.self, at: "filename")
-////
-////
-////        let brunch = Brunch(id: nil, tag: tagString, filename: filenameString)
-////        return brunch.save(on: req)
-//
-//        let brunch = try req.query.get(Brunch.self)
-//        return brunch.save(on: req)
-//
-//
-////        return try req.parameters.next(Brunch.self).flatMap { brunch in
-////            return brunch.save(on: req)
-////        }
-//
-//    }
+    // curl -X DELETE http://localhost:8080/branch/PULSAR-1234
+    func delete(_ req: Request) throws -> EventLoopFuture<Response> {
+        guard let tag = req.parameters.get("tag") else {
+            throw Abort(.badRequest)
+        }
 
-//    func delete(req: Request) throws -> EventLoopFuture<HTTPStatus> {
-//        return Brunch.find(req.parameters.get("branchID"), on: req.db)
-//            .unwrap(or: Abort(.notFound))
-//            .flatMap { $0.delete(on: req.db) }
-//            .transform(to: .ok)
-//    }
+        return Branch.query(on: req.db)
+            .filter(\.$tag == tag)
+            .first()
+            .unwrap(or: Abort(.notFound))
+            .flatMapThrowing { branch -> EventLoopFuture<Void> in
+                let filePath = URL(fileURLWithPath: "./\(branch.tag)/\(branch.filename)")
+                try FileManager.default.removeItem(at: filePath)
+
+                let dirPath = URL(fileURLWithPath: "./\(branch.tag)")
+                try FileManager.default.removeItem(at: dirPath)
+
+                return branch.delete(on: req.db)
+            }
+            .transform(to: Response(status: .ok))
+    }
 
 
     // http://localhost:8080/download/PULSAR-1234
     func download(_ req: Request) throws -> EventLoopFuture<Response> {
         guard let tag = req.parameters.get("tag") else {
-            return req.eventLoop.makeSucceededFuture(Response(status: .badRequest))
+            throw Abort(.badRequest)
         }
 
-        let responseResult = Brunch.query(on: req.db)
+        let responseResult = Branch.query(on: req.db)
             .filter(\.$tag == tag)
             .first()
-            .flatMap { brunch -> EventLoopFuture<Response> in
-                guard let filename = brunch?.filename else {
-                        return req.eventLoop.makeSucceededFuture(Response(status: .notFound))
-                }
-
-                let filePath = URL(fileURLWithPath: "./\(tag)/\(filename)")
+            .unwrap(or: Abort(.notFound))
+            .flatMapThrowing { branch -> Response in
+                let filePath = URL(fileURLWithPath: "./\(tag)/\(branch.filename)")
 
                 guard let attributes = try? FileManager.default.attributesOfItem(atPath: filePath.path),
                     let fileSize = (attributes[.size] as? NSNumber)?.intValue else {
-                        return req.eventLoop.makeSucceededFuture(Response(status: .notFound))
+                        throw Abort(.internalServerError)
                 }
 
                 let response = Response(status: .ok)
-                response.headers.contentDisposition = .init(.attachment, name: nil, filename: filename)
+                response.headers.contentDisposition = .init(.attachment, name: nil, filename: branch.filename)
                 response.body = Response.Body(stream: { stream in
                     req.fileio.readFile(at: filePath.path) { chunk -> EventLoopFuture<Void> in
                             return stream.write(.buffer(chunk))
@@ -85,7 +78,7 @@ struct BrunchController {
                         }
                     }, count: fileSize)
 
-                return req.eventLoop.makeSucceededFuture(response)
+                return response
             }
 
         return responseResult
@@ -94,10 +87,9 @@ struct BrunchController {
 
     // curl -X POST -v --data-binary @Channel-Alpha.ipa http://localhost:8080/upload/PULSAR-1234/Channel-Alpha.ipa
     func upload(_ req: Request) throws -> EventLoopFuture<HTTPStatus> {
-
         guard let tag = req.parameters.get("tag"),
             let filename = req.parameters.get("filename") else {
-                return req.eventLoop.makeSucceededFuture(.badRequest)
+                throw Abort(.badRequest)
         }
 
         // create dir
@@ -106,9 +98,9 @@ struct BrunchController {
         try FileManager.default.createDirectory(atPath: dirPath.path, withIntermediateDirectories: true, attributes: nil)
 
         let filePath = URL(fileURLWithPath: "./\(tag)/\(filename)")
-        FileManager.default.createFile(atPath: filePath.path, contents: nil, attributes: nil)
-        guard let fileHandle = FileHandle(forWritingAtPath: filePath.path) else {
-            return req.eventLoop.makeSucceededFuture(.internalServerError)
+        guard FileManager.default.createFile(atPath: filePath.path, contents: nil, attributes: nil),
+            let fileHandle = FileHandle(forWritingAtPath: filePath.path) else {
+                throw Abort(.internalServerError)
         }
 
         let requestResult = req.eventLoop.makePromise(of: HTTPStatus.self)
@@ -127,11 +119,11 @@ struct BrunchController {
             case .end:
                 fileHandle.closeFile()
 
-                let queryResult = Brunch.query(on: req.db)
+                let queryResult = Branch.query(on: req.db)
                     .filter(\.$tag == tag)
                     .first()
                     .flatMap { brunch -> EventLoopFuture<Void> in
-                        let brunchToSave = brunch ?? Brunch(tag: tag, filename: filename, tested: false, description: "")
+                        let brunchToSave = brunch ?? Branch(tag: tag, filename: filename, tested: false, description: "")
 
                         let saveResult = brunchToSave.save(on: req.db)
 
@@ -157,55 +149,44 @@ struct BrunchController {
     func install(_ req: Request) throws -> EventLoopFuture<Response> {
         guard let tag = req.parameters.get("tag"),
             let host = req.headers.first(name: "Host") else {
-            return req.eventLoop.makeSucceededFuture(Response(status: .badRequest))
+                throw Abort(.badRequest)
         }
 
-        let responseResult = Brunch.query(on: req.db)
+        return Branch.query(on: req.db)
             .filter(\.$tag == tag)
             .first()
+            .unwrap(or: Abort(.notFound))
             .flatMap { brunch -> EventLoopFuture<Response> in
-                guard let brunch = brunch else {
-                        return req.eventLoop.makeSucceededFuture(Response(status: .notFound))
-                }
-
                 // <a href="itms-services://?action=download-manifest&url=https://your.domain.com/your-app/manifest.plist">Awesome App</a>
                 let response = req.redirect(to: "itms-services://?action=download-manifest&url=https://\(host)/install/\(brunch.tag)/manifest.plist", type: .temporary)
                 return req.eventLoop.makeSucceededFuture(response)
             }
-
-        return responseResult
     }
 
 
     // http://localhost:8080/install/PULSAR-1234/manifest.plist
     func installManifest(_ req: Request) throws -> EventLoopFuture<Response> {
         guard let tag = req.parameters.get("tag"),
-        let host = req.headers.first(name: "Host") else {
-            return req.eventLoop.makeSucceededFuture(Response(status: .badRequest))
+            let host = req.headers.first(name: "Host") else {
+                throw Abort(.badRequest)
         }
 
-        let responseResult = Brunch.query(on: req.db)
+        return Branch.query(on: req.db)
             .filter(\.$tag == tag)
             .first()
+            .unwrap(or: Abort(.notFound))
             .flatMap { brunch -> EventLoopFuture<Response> in
-                guard let filename = brunch?.filename else {
-                        return req.eventLoop.makeSucceededFuture(Response(status: .notFound))
-                }
-
                 let manifestTemplate = R.manifest
                 let manifest = manifestTemplate
                     .replacingOccurrences(of: "${DOMAIN}", with: host)
                     .replacingOccurrences(of: "${BRANCH_TAG}", with: tag)
-                    .replacingOccurrences(of: "${FILE_NAME}", with: filename)
+                    .replacingOccurrences(of: "${FILE_NAME}", with: brunch.filename)
                     .replacingOccurrences(of: "${BUNDLE_IDENTIFIER}", with: "ru.mail.channel-alpha")
                     .replacingOccurrences(of: "${APPLICATION_VERSION}", with: "1.0")
                     .replacingOccurrences(of: "${DISPLAY_NAME}", with: "channel-alpha")
 
                 let response = Response(status: .ok, body: Response.Body(string: manifest))
-
                 return req.eventLoop.makeSucceededFuture(response)
             }
-
-        return responseResult
     }
 }
