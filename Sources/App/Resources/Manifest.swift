@@ -24,7 +24,7 @@ extension R {
                             <key>kind</key>
                             <string>software-package</string>
                             <key>url</key>
-                            <string>https://${DOMAIN}/download/${BRANCH_TAG}/${FILE_NAME}</string>
+                            <string>https://${DOMAIN}/download/${PROJECT_NAME}/${BRANCH_TAG}/${FILE_NAME}</string>
                         </dict>
                     </array>
                     <key>metadata</key>

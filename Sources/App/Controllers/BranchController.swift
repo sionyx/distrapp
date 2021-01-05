@@ -3,34 +3,49 @@ import Vapor
 
 struct BranchController {
     // http://localhost:8080/branches
-    func index(req: Request) throws -> EventLoopFuture<[Branch]> {
-        return Branch.query(on: req.db).all()
+    func _index(req: Request) throws -> EventLoopFuture<[Branch.Short]> {
+        return Branch.query(on: req.db).all().map { $0.map { $0.short }}
     }
 
-    // http://localhost:8080/branch/PULSAR-1234
-    func one(req: Request) throws -> EventLoopFuture<Branch> {
-        guard let tag = req.parameters.get("tag") else {
+    func list(req: Request) throws -> EventLoopFuture<[Branch.Short]> {
+        guard let currentUser = try? req.auth.require(User.self),
+              let currentUserId = currentUser.id,
+              let params = try? req.query.decode(GetProjectParams.self) else {
             throw Abort(.badRequest)
         }
 
-        let responseResult = Branch.query(on: req.db)
-            .filter(\.$tag == tag)
-            .first()
-            .unwrap(or: Abort(.notFound))
+        let allowedProject = Project
+            .by(name: params.project, on: req.db)
+            .granted(to: currentUserId, on: req.db)
+            .canView()
 
-        return responseResult
+        let branches = allowedProject
+            .flatMap { project -> EventLoopFuture<[Branch.Short]> in
+                return project.$branches.query(on: req.db)
+                    .all()
+                    .map { $0.map { $0.short }}
+            }
+
+        return branches
     }
 
     // curl -X DELETE http://localhost:8080/branch/PULSAR-1234
-    func delete(_ req: Request) throws -> EventLoopFuture<Response> {
-        guard let tag = req.parameters.get("tag") else {
+    func delete(_ req: Request) throws -> EventLoopFuture<HTTPStatus> {
+        guard let currentUser = try? req.auth.require(User.self),
+              let currentUserId = currentUser.id,
+              let params = try? req.content.decode(GetBranchParams.self) else {
             throw Abort(.badRequest)
         }
 
-        return Branch.query(on: req.db)
-            .filter(\.$tag == tag)
-            .first()
-            .unwrap(or: Abort(.notFound))
+        let allowedProject = Project
+            .by(name: params.project, on: req.db)
+            .granted(to: currentUserId, on: req.db)
+            .canView()
+
+        let branch = allowedProject
+            .branch(by: params.branch, on: req.db)
+
+        return branch
             .flatMapThrowing { branch -> EventLoopFuture<Void> in
                 let filePath = URL(fileURLWithPath: "./\(branch.tag)/\(branch.filename)")
                 try FileManager.default.removeItem(at: filePath)
@@ -40,67 +55,30 @@ struct BranchController {
 
                 return branch.delete(on: req.db)
             }
-            .transform(to: Response(status: .ok))
+            .transform(to: .ok)
     }
 
 
-    // http://localhost:8080/download/PULSAR-1234
-    func download(_ req: Request) throws -> EventLoopFuture<Response> {
-        guard let tag = req.parameters.get("tag") else {
+    //curl -X POST -v --header "Authorization: Bearer XXXX" --data-binary @Channel-Alpha.ipa "http://localhost:8080/api/v1/upload?project=MINICLOUD&branch=MINICLOUD-1234&description=4321&filename=Channel-Alpha.ipa"
+    func upload(_ req: Request) throws -> EventLoopFuture<HTTPStatus> {
+        guard let currentUser = try? req.auth.require(User.self),
+              let currentUserId = currentUser.id else {
             throw Abort(.badRequest)
         }
 
-        let responseResult = Branch.query(on: req.db)
-            .filter(\.$tag == tag)
-            .first()
-            .unwrap(or: Abort(.notFound))
-            .flatMapThrowing { branch -> Response in
-                let filePath = URL(fileURLWithPath: "./\(tag)/\(branch.filename)")
-
-                guard let attributes = try? FileManager.default.attributesOfItem(atPath: filePath.path),
-                    let fileSize = (attributes[.size] as? NSNumber)?.intValue else {
-                        throw Abort(.internalServerError)
-                }
-
-                let response = Response(status: .ok)
-                response.headers.contentDisposition = .init(.attachment, name: nil, filename: branch.filename)
-                response.body = Response.Body(stream: { stream in
-                    req.fileio.readFile(at: filePath.path) { chunk -> EventLoopFuture<Void> in
-                            return stream.write(.buffer(chunk))
-                        }
-                        .whenComplete { result in
-                            switch result {
-                            case .failure(let error):
-                                stream.write(.error(error), promise: nil)
-                            case .success:
-                                stream.write(.end, promise: nil)
-                            }
-                        }
-                    }, count: fileSize)
-
-                return response
-            }
-
-        return responseResult
-    }
-
-
-    // curl -X POST -v --data-binary @Channel-Alpha.ipa http://localhost:8080/upload/PULSAR-1234/Channel-Alpha.ipa
-    func upload(_ req: Request) throws -> EventLoopFuture<HTTPStatus> {
-        guard let tag = req.parameters.get("tag"),
-            let filename = req.parameters.get("filename") else {
-                throw Abort(.badRequest)
+        guard let params = try? req.query.decode(PostBranchParams.self) else {
+            throw Abort(.badRequest)
         }
 
         // create dir
-        let dirPath = URL(fileURLWithPath: "./\(tag)")
+        let dirPath = URL(fileURLWithPath: "./\(params.branch)")
         print("dir path: \(dirPath.absoluteString)")
         try FileManager.default.createDirectory(atPath: dirPath.path, withIntermediateDirectories: true, attributes: nil)
 
-        let filePath = URL(fileURLWithPath: "./\(tag)/\(filename)")
-        guard FileManager.default.createFile(atPath: filePath.path, contents: nil, attributes: nil),
-            let fileHandle = FileHandle(forWritingAtPath: filePath.path) else {
-                throw Abort(.internalServerError)
+        let filePath = URL(fileURLWithPath: "./\(params.branch)/\(params.filename)").path
+        guard FileManager.default.createFile(atPath: filePath, contents: nil, attributes: nil),
+              let fileHandle = FileHandle(forWritingAtPath: filePath) else {
+            throw Abort(.internalServerError)
         }
 
         let requestResult = req.eventLoop.makePromise(of: HTTPStatus.self)
@@ -119,11 +97,32 @@ struct BranchController {
             case .end:
                 fileHandle.closeFile()
 
-                let queryResult = Branch.query(on: req.db)
-                    .filter(\.$tag == tag)
-                    .first()
-                    .flatMap { brunch -> EventLoopFuture<Void> in
-                        let brunchToSave = brunch ?? Branch(tag: tag, filename: filename, tested: false, description: "")
+                let allowedProject = Project
+                    .by(name: params.project, on: req.db)
+                    .granted(to: currentUserId, on: req.db)
+                    .canUpload()
+
+
+                print(drainResult)
+                let attr = try? FileManager.default.attributesOfItem(atPath: filePath)
+                let fileSize = Int((attr?[FileAttributeKey.size] as? UInt64 ?? 0) / 1048576)
+
+                let queryResult = allowedProject
+                    .flatMap { project -> EventLoopFuture<(Project, Branch?)> in
+                        return project.$branches.query(on: req.db)
+                            .filter(\.$tag == params.branch)
+                            .first()
+                            .map { (project, $0)  }
+                    }
+                    .flatMap { project, brunch -> EventLoopFuture<Void> in
+                        guard let brunchToSave = brunch ?? (try? Branch(project: project, tag: params.branch, filename: params.filename, size: 0, isTested: false, isProtected: false, description: params.description, buildNumber: 0)) else {
+                            return req.eventLoop.makeFailedFuture(Abort(.internalServerError, reason: "Cannot create branch"))
+                        }
+                        brunchToSave.filename = params.filename
+                        brunchToSave.description = params.description
+                        brunchToSave.size = fileSize
+                        brunchToSave.isTested = false
+                        brunchToSave.buildNumber += 1
 
                         let saveResult = brunchToSave.save(on: req.db)
 
@@ -143,50 +142,5 @@ struct BranchController {
             }
         }
         return requestResult.futureResult
-    }
-
-    // http://localhost:8080/install/PULSAR-1234
-    func install(_ req: Request) throws -> EventLoopFuture<Response> {
-        guard let tag = req.parameters.get("tag"),
-            let host = req.headers.first(name: "Host") else {
-                throw Abort(.badRequest)
-        }
-
-        return Branch.query(on: req.db)
-            .filter(\.$tag == tag)
-            .first()
-            .unwrap(or: Abort(.notFound))
-            .flatMap { brunch -> EventLoopFuture<Response> in
-                // <a href="itms-services://?action=download-manifest&url=https://your.domain.com/your-app/manifest.plist">Awesome App</a>
-                let response = req.redirect(to: "itms-services://?action=download-manifest&url=https://\(host)/install/\(brunch.tag)/manifest.plist", type: .temporary)
-                return req.eventLoop.makeSucceededFuture(response)
-            }
-    }
-
-
-    // http://localhost:8080/install/PULSAR-1234/manifest.plist
-    func installManifest(_ req: Request) throws -> EventLoopFuture<Response> {
-        guard let tag = req.parameters.get("tag"),
-            let host = req.headers.first(name: "Host") else {
-                throw Abort(.badRequest)
-        }
-
-        return Branch.query(on: req.db)
-            .filter(\.$tag == tag)
-            .first()
-            .unwrap(or: Abort(.notFound))
-            .flatMap { brunch -> EventLoopFuture<Response> in
-                let manifestTemplate = R.manifest
-                let manifest = manifestTemplate
-                    .replacingOccurrences(of: "${DOMAIN}", with: host)
-                    .replacingOccurrences(of: "${BRANCH_TAG}", with: tag)
-                    .replacingOccurrences(of: "${FILE_NAME}", with: brunch.filename)
-                    .replacingOccurrences(of: "${BUNDLE_IDENTIFIER}", with: "ru.mail.channel-alpha")
-                    .replacingOccurrences(of: "${APPLICATION_VERSION}", with: "1.0")
-                    .replacingOccurrences(of: "${DISPLAY_NAME}", with: "channel-alpha")
-
-                let response = Response(status: .ok, body: Response.Body(string: manifest))
-                return req.eventLoop.makeSucceededFuture(response)
-            }
     }
 }
