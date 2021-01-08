@@ -2,7 +2,7 @@
 import PackageDescription
 
 let package = Package(
-    name: "siodistr",
+    name: "distr.app",
     platforms: [
        .macOS(.v10_15)
     ],
@@ -21,10 +21,6 @@ let package = Package(
             .product(name: "QueuesFluentDriver", package: "QueuesFluentDriver"),
             .product(name: "Vapor", package: "vapor")
         ]),
-        .target(name: "Run", dependencies: ["App"]),
-        .testTarget(name: "AppTests", dependencies: [
-            .target(name: "App"),
-            .product(name: "XCTVapor", package: "vapor"),
-        ])
+        .target(name: "Run", dependencies: ["App"])
     ]
 )
