@@ -10,10 +10,19 @@ import Fluent
 import Queues
 
 extension MyTeam {
-    struct PingHandler: Job {
-        typealias Payload = MyTeam.MessagePayload
-        func dequeue(_ context: QueueContext, _ payload: Payload) -> EventLoopFuture<Void> {
-            return context.myTeam.sendMessage("pong", to: payload.from.userId)
+    class PingHandler: MyTeamHandler {
+        private var bot: MyTeam.Sender!
+
+        func configure(bot: MyTeam.Sender) {
+            self.bot = bot
+        }
+
+        func canHandle(_ messagePayload: MyTeam.MessagePayload) -> Bool {
+            messagePayload.text == "/ping"
+        }
+
+        func handle(_ messagePayload: MyTeam.MessagePayload, eventLoop: EventLoop, db: Database) -> EventLoopFuture<Void> {
+            return bot.sendMessage("pong", to: messagePayload.from.userId)
         }
     }
 }

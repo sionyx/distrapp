@@ -27,7 +27,7 @@ public func configure(_ app: Application) throws {
                                     database: database,
                                     tlsConfiguration: .forClient(certificateVerification: .none))
 
-    MyTeamConfiguration.token = myteamToken
+    MyTeam.Configuration.token = myteamToken
 
     app.databases.use(.mysql(configuration: config, maxConnectionsPerEventLoop: 8), as: .mysql)
     app.migrations.add(CreateUsers())
@@ -44,15 +44,10 @@ public func configure(_ app: Application) throws {
     // register routes
     try routes(app)
 
-    //Register jobs
-    app.queues.add(MyTeam.MyTeamJob())
-    app.queues.add(MyTeam.StartHandler())
-    app.queues.add(MyTeam.PingHandler())
-
-    try app.queues.startInProcessJobs(on: .default)
-    try app.queues.startScheduledJobs()
-
-    _ = app.queues.queue
-        .dispatch(MyTeam.MyTeamJob.self, "")
+    // MyTeam Bot
+    let botListener = app.myTeamListener
+    botListener.configure(with: [ MyTeam.PingHandler(),
+                                  MyTeam.StartHandler() ])
+    botListener.listen()
 }
 

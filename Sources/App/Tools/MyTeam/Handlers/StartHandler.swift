@@ -10,19 +10,43 @@ import Fluent
 import Queues
 
 extension MyTeam {
-    struct StartHandler: Job {
-        typealias Payload = MyTeam.MessagePayload
-        func dequeue(_ context: QueueContext, _ payload: Payload) -> EventLoopFuture<Void> {
-            let mtUser = payload.from
-            return User.query(on: context.application.db)
+    class StartHandler: MyTeamHandler {
+        private var bot: MyTeam.Sender!
+
+        func configure(bot: MyTeam.Sender) {
+            self.bot = bot
+        }
+
+        func canHandle(_ messagePayload: MyTeam.MessagePayload) -> Bool {
+            messagePayload.text == "/start"
+        }
+
+        func handle(_ messagePayload: MyTeam.MessagePayload, eventLoop: EventLoop, db: Database) -> EventLoopFuture<Void> {
+            let mtUser = messagePayload.from
+            return User.query(on: db)
                 .filter(\.$authId == mtUser.userId)
                 .first()
-                .flatMap { user -> EventLoopFuture<Void> in
-                    let userToSave = user ?? User(firstName: mtUser.firstName, lastName: mtUser.lastName, authProvider: "myteam", authId: mtUser.userId)
-                    userToSave.authProvider = "myteam"
-                    userToSave.firstName = mtUser.firstName
-                    userToSave.lastName = mtUser.lastName
-                    return userToSave.save(on: context.application.db)
+                .flatMap { [weak self] user -> EventLoopFuture<Void> in
+                    guard let self = self else {
+                        return eventLoop.makeSucceededFuture(())
+                    }
+                    let userToSave: User
+                    let reply: EventLoopFuture<Void>
+                    if let user = user {
+                        userToSave = user
+                        userToSave.authProvider = "myteam"
+                        userToSave.firstName = mtUser.firstName
+                        userToSave.lastName = mtUser.lastName
+                        reply = self.bot.sendMessage("User Info Updated", to: mtUser.userId)
+                    }
+                    else {
+                        userToSave = User(firstName: mtUser.firstName, lastName: mtUser.lastName, authProvider: "myteam", authId: mtUser.userId)
+                        reply = self.bot.sendMessage("Welcome to distr.app! User Created", to: mtUser.userId)
+                    }
+
+                    let saveResult = userToSave.save(on: db)
+
+                    return eventLoop.flatten([reply, saveResult])
                 }
         }
     }
