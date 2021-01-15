@@ -70,7 +70,7 @@ func protectedRoutes(_ builder: RoutesBuilder, _ controllers: Controllers) {
 
     let branches = builder.grouped("branches")
     branches.on(.GET, use: controllers.branchesController.list)
-    branches.on(.DELETE, ":project", "branch", ":tag", use: controllers.branchesController.delete)
+    branches.on(.DELETE, use: controllers.branchesController.delete)
 
     let upload = builder.grouped("upload")
     upload.on(.POST, body: .stream, use: controllers.branchesController.upload)

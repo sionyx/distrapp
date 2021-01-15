@@ -1,0 +1,545 @@
+openapi: 3.0.1
+info:
+  title: distr.app
+  description: |
+    Welcome to disr.app!
+
+    * Open chat with `@distrappbot` in MyTeam, click Start. Your account will be created.
+    * Get one time code by `/auth/getcode` request. Code will be sent by MyTeam bot.
+    * Get bearer token by `/auth/gettoken` request.
+    * Use token in swagger by pressing `Authorize` button.
+    * Create new project with `/projects` post request.
+    * Upload build with `/upload` post request.
+    * Install build to device by open link `https://distr.app/install/{projectname}/{branchname}` (i.e. https://distr.app/install/MYFANCYPROJECT/MYFANCYPROJECT-123)
+    *  Have fun =)
+  version: 0.1 beta
+servers:
+- url: https://distr.app/api/v1
+tags:
+- name: Auth
+  description: Get authorized
+- name: Projects
+  description: Add, list and delete projets
+- name: Branches
+  description: Add, list and delete branches
+- name: Grants
+  description: Add, list and remove users from projets
+
+paths:
+  /auth/getcode:
+    get:
+      tags:
+      - Auth
+      summary: Get auth code
+      operationId: getAuthCode
+      parameters:
+      - name: email
+        in: query
+        description: email of user to be authorized
+        required: true
+        schema:
+          type: string
+      responses:
+        200:
+          description: successful operation
+        400:
+          description: Invalid email
+  /auth/gettoken:
+    get:
+      tags:
+      - Auth
+      summary: Get token by code
+      operationId: getAuthToken
+      parameters:
+      - name: email
+        in: query
+        description: email of user to be authorized
+        required: true
+        schema:
+          type: string
+      - name: code
+        in: query
+        description: code received by getcode request
+        required: true
+        schema:
+          type: string
+      - name: place
+        in: query
+        description: place where you are going to use token, i.e. 'ci', 'bot', 'myapp'
+        required: true
+        schema:
+          type: string
+      responses:
+        200:
+          description: successful operation
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/UserToken'
+        400:
+          description: Invalid parameters or code is out of date
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+        404:
+          description: User with specified email is not found
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+
+  /projects:
+    post:
+      tags:
+      - Projects
+      summary: Creates new project
+      operationId: createProject
+      requestBody:
+        description: To create new project specify name, title and application bundle id. Description and icon are optional
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/Project'
+        required: true
+      responses:
+        200:
+          description: successful operation
+        400:
+          description: Invalid Project Parameters
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+      security:
+      - token: []
+
+    get:
+      tags:
+      - Projects
+      summary: Shows list of projects granted to user
+      operationId: listProjects
+      responses:
+        200:
+          description: successful operation
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ArrayOfProjects'
+        403:
+          description: Auth required
+      security:
+      - token: []
+
+    delete:
+      tags:
+      - Projects
+      summary: Deletes project
+      operationId: deleteProject
+      parameters:
+      - name: project
+        in: query
+        description: name of project
+        required: true
+        schema:
+          type: string
+      responses:
+        200:
+          description: successful operation
+        400:
+          description: Invalid Project Parameters
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+      security:
+      - token: []
+
+  /upload:
+    post:
+      tags:
+      - Branches
+      summary: Creates new or update branch
+      operationId: uploadBranch
+      parameters:
+      - name: project
+        in: query
+        description: name of project
+        required: true
+        example: MYFANCYPROJECT
+        schema:
+          type: string
+      - name: branch
+        in: query
+        description: name of branch
+        required: true
+        example: MYFANCYPROJECT-123
+        schema:
+          type: string
+      - name: filename
+        in: query
+        description: file name
+        required: true
+        example: fancy.ipa
+        schema:
+          type: string
+      - name: description
+        in: query
+        description: optional description
+        example: New Feature
+        schema:
+          type: string
+      requestBody:
+        content:
+          application/octet-stream:
+            schema:
+              type: string
+              format: binary
+      responses:
+        200:
+          description: successful operation
+        400:
+          description: Invalid Project Parameters
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+        403:
+          description: Auth required
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+      security:
+      - token: []
+
+  /branches:
+    get:
+      tags:
+      - Branches
+      summary: Shows list of branches in specified project
+      operationId: listBranches
+      parameters:
+      - name: project
+        in: query
+        description: name of project
+        required: true
+        example: MYFANCYPROJECT
+        schema:
+          type: string
+      responses:
+        200:
+          description: successful operation
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ArrayOfBranches'
+        400:
+          description: Invalid Project Parameters
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+        403:
+          description: Auth required
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+      security:
+      - token: []
+
+    delete:
+      tags:
+      - Branches
+      summary: Deletes specified branch from project
+      operationId: deleteBranch
+      parameters:
+      - name: project
+        in: query
+        description: name of project
+        required: true
+        example: MYFANCYPROJECT
+        schema:
+          type: string
+      - name: branch
+        in: query
+        description: name of branch
+        required: true
+        example: MYFANCYPROJECT-123
+        schema:
+          type: string
+      responses:
+        200:
+          description: successful operation
+        400:
+          description: Invalid Project Parameters
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+        403:
+          description: Auth required
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+      security:
+      - token: []
+
+
+
+
+
+
+
+  /grants:
+    post:
+      tags:
+      - Grants
+      summary: Adds user to project
+      operationId: createGrant
+      parameters:
+      - name: project
+        in: query
+        description: name of project
+        required: true
+        example: MYFANCYPROJECT
+        schema:
+          type: string
+      - name: user
+        in: query
+        description: user id
+        required: true
+        example: other.user@example.com
+        schema:
+          type: string
+      - name: type
+        in: query
+        description: >
+            Grant Types:
+             * `view` - User can see list of project branches
+             * `test` - User can mark branch as tested
+             * `upload` - User can create project branches and upload new builds to branch
+        required: true
+        example: upload
+        schema:
+          type: string
+          enum:
+          - view
+          - test
+          - upload
+
+      responses:
+        200:
+          description: successful operation
+        400:
+          description: Invalid Project Parameters
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+      security:
+      - token: []
+
+    get:
+      tags:
+      - Grants
+      summary: Shows list of projects granted to user
+      operationId: listGrants
+      parameters:
+      - name: project
+        in: query
+        description: name of project
+        required: true
+        example: MYFANCYPROJECT
+        schema:
+          type: string
+      responses:
+        200:
+          description: successful operation
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ArrayOfGrants'
+        403:
+          description: Auth required
+      security:
+      - token: []
+
+    delete:
+      tags:
+      - Grants
+      summary: Removes user from project
+      operationId: deleteGrant
+      parameters:
+      - name: project
+        in: query
+        description: name of project
+        required: true
+        example: MYFANCYPROJECT
+        schema:
+          type: string
+      - name: user
+        in: query
+        description: user id
+        required: true
+        example: other.user@example.com
+        schema:
+          type: string
+      responses:
+        200:
+          description: successful operation
+        400:
+          description: Invalid Project Parameters
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+      security:
+      - token: []
+
+components:
+  schemas:
+    UserToken:
+      type: object
+      properties:
+        token:
+          type: string
+          example: C4E8A1A9B37B3AF01FE14DB35E5E0B003B7EAF8A9268A18C9A82ED418888BB00
+        place:
+          type: string
+          example: ci-bot
+    Project:
+      type: object
+      required:  # List the required properties here
+      - name
+      - title
+      - bundle_id
+      properties:
+        name:
+          type: string
+          example: MYFANCYPROJECT
+        title:
+          type: string
+          example: My Fancy Project
+        bundle_id:
+          type: string
+          example: com.example.myfancy
+        description:
+          type: string
+          example: My Fancy Project made for friends
+        icon:
+          type: string
+          example: http://example.com/image.jpg
+    ArrayOfProjects:
+      type: array
+      items:
+        $ref: '#/components/schemas/Project'
+    Branch:
+      type: object
+      required:  # List the required properties here
+      - tag
+      - created
+      - updated
+      - filename
+      - size
+      - is_tested
+      - is_protected
+      - build_number
+      properties:
+        tag:
+          type: string
+          example: MYFANCYPROJECT-123
+        created:
+          type: integer
+          example: 1609459200
+        updated:
+          type: integer
+          example: 1609459200
+        filename:
+          type: string
+          example: myapp.ipa
+        size:
+          type: integer
+          example: 1048576
+        is_tested:
+          type: boolean
+          example: false
+        is_protected:
+          type: boolean
+          example: false
+        description:
+          type: string
+          example: Extraodinary feature
+        build_number:
+          type: integer
+          example: 123
+    ArrayOfBranches:
+      type: array
+      items:
+        $ref: '#/components/schemas/Branch'
+
+    User:
+      type: object
+      required:  # List the required properties here
+      - first_name
+      - last_name
+      - id
+      - provider
+      properties:
+        first_name:
+          type: string
+          example: John
+        last_name:
+          type: string
+          example: Appleseed
+        id:
+          type: string
+          example: other.user@example.com
+        provider:
+          type: string
+          example: myteam
+          enum:
+          - myteam
+
+    Grant:
+      type: object
+      required:  # List the required properties here
+      - type
+      - user
+      properties:
+        type:
+          type: string
+          example: upload
+          enum:
+          - view
+          - test
+          - upload
+          - owner
+          description: >
+            Grant Types:
+             * `view` - User can see list of project branches
+             * `test` - User can mark branch as tested
+             * `upload` - User can create project branches and upload new builds to branch
+             * `owner` - User can add and remove other users from project, can delete project, can mark branch as protected. _Ownership cannot be granted_
+        user:
+          $ref: '#/components/schemas/User'
+    ArrayOfGrants:
+      type: array
+      items:
+        $ref: '#/components/schemas/Grant'
+
+    ErrorResponse:
+      type: object
+      properties:
+        error:
+          type: boolean
+        reason:
+          type: string
+
+  securitySchemes:
+    token:
+      type: http
+      scheme: bearer
+

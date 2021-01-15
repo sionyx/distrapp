@@ -33,7 +33,7 @@ struct BranchController {
     func delete(_ req: Request) throws -> EventLoopFuture<HTTPStatus> {
         guard let currentUser = try? req.auth.require(User.self),
               let currentUserId = currentUser.id,
-              let params = try? req.content.decode(GetBranchParams.self) else {
+              let params = try? req.query.decode(GetBranchParams.self) else {
             throw Abort(.badRequest)
         }
 

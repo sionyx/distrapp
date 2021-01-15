@@ -33,11 +33,18 @@ struct AuthController {
                     .filter(\.$email == params.email)
                     .first()
                     .flatMap { oneTimeCode -> EventLoopFuture<Void> in
-                        (oneTimeCode?.withValue(code) ?? OneTimeCode(value: code, email: params.email))
+                        let saveResult = (oneTimeCode?.withValue(code) ?? OneTimeCode(value: code, email: params.email))
                             .save(on: req.db)
+
+                        saveResult
+                            .whenFailure({ error in
+                                req.logger.report(error: error)
+                            })
+
+                        return saveResult
                     }
-                    .transform(to: Response(status: .ok))
             }
+            .transform(to: Response(status: .ok))
     }
 
     // http://localhost:8080/auth/gettoken?email=balashov@corp.mail.ru&code=913889
@@ -69,7 +76,7 @@ struct AuthController {
                 User.query(on: req.db)
                     .filter(\.$authId == params.email)
                     .first()
-                    .unwrap(or: Abort(.notFound))
+                    .unwrap(or: Abort(.notFound, reason: "User not found. Find @distrappbot bot in MyTeam and press start."))
             }
             .flatMap { user -> EventLoopFuture<UserToken.Short> in
                 guard let userToken = try? user.generateToken(place: params.place) else {

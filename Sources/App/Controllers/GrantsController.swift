@@ -61,7 +61,7 @@ struct GrantsController {
     func add(_ req: Request) throws -> EventLoopFuture<HTTPStatus> {
         guard let currentUser = try? req.auth.require(User.self),
               let currentUserId = currentUser.id,
-              let shortGrant = try? req.content.decode(Grant.Short.self),
+              let shortGrant = try? req.query.decode(Grant.Short.self),
               let shortGrantType = shortGrant.type,
               shortGrantType != .owner else {
             throw Abort(.badRequest)
@@ -93,7 +93,7 @@ struct GrantsController {
     func delete(_ req: Request) throws -> EventLoopFuture<HTTPStatus> {
         guard let currentUser = try? req.auth.require(User.self),
               let currentUserId = currentUser.id,
-              let shortGrant = try? req.content.decode(Grant.Short.self) else {
+              let shortGrant = try? req.query.decode(Grant.Short.self) else {
             throw Abort(.badRequest)
         }
 
