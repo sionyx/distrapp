@@ -46,7 +46,7 @@ struct BranchController {
             .branch(by: params.branch, on: req.db)
 
         return branch
-            .flatMapThrowing { branch -> EventLoopFuture<Void> in
+            .flatMapThrowing { _, branch -> EventLoopFuture<Void> in
                 let filePath = URL(fileURLWithPath: "./\(branch.tag)/\(branch.filename)")
                 try FileManager.default.removeItem(at: filePath)
 

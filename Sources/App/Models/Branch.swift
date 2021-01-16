@@ -110,13 +110,14 @@ struct PostBranchParams: Content {
 }
 
 extension EventLoopFuture where Value == Project {
-    func branch(by tag: String, on db: Database) -> EventLoopFuture<Branch> {
+    func branch(by tag: String, on db: Database) -> EventLoopFuture<(Project, Branch)> {
         self
-            .flatMap { project -> EventLoopFuture<Branch> in
+            .flatMap { project -> EventLoopFuture<(Project, Branch)> in
                 return project.$branches.query(on: db)
                     .filter(\.$tag == tag)
                     .first()
                     .unwrap(or: Abort(.notFound, reason: "Branch Not Found"))
+                    .map { (project, $0) }
             }
     }
 }

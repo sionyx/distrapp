@@ -141,6 +141,7 @@ paths:
         in: query
         description: name of project
         required: true
+        example: MYFANCYPROJECT
         schema:
           type: string
       responses:

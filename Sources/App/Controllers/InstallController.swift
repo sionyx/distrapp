@@ -22,9 +22,9 @@ struct InstallController {
             .branch(by: tag, on: req.db)
 
         return branch
-            .map { brunch -> Response in
+            .map { project, brunch -> Response in
                 // <a href="itms-services://?action=download-manifest&url=https://your.domain.com/your-app/manifest.plist">Awesome App</a>
-                let response = req.redirect(to: "itms-services://?action=download-manifest&url=https://\(host)/install/\(brunch.project.name)/\(brunch.tag)/manifest.plist", type: .temporary)
+                let response = req.redirect(to: "itms-services://?action=download-manifest&url=https://\(host)/install/\(project.name)/\(brunch.tag)/manifest.plist", type: .temporary)
                 return response
             }
     }
@@ -43,16 +43,16 @@ struct InstallController {
             .branch(by: tag, on: req.db)
 
         return branch
-            .map { branch -> Response in
+            .map { project, branch -> Response in
                 let manifestTemplate = R.manifest
                 let manifest = manifestTemplate
                     .replacingOccurrences(of: "${DOMAIN}", with: host)
-                    .replacingOccurrences(of: "${PROJECT_NAME}", with: branch.project.name)
-                    .replacingOccurrences(of: "${BRANCH_TAG}", with: tag)
+                    .replacingOccurrences(of: "${PROJECT_NAME}", with: project.name)
+                    .replacingOccurrences(of: "${BRANCH_TAG}", with: branch.tag)
                     .replacingOccurrences(of: "${FILE_NAME}", with: branch.filename)
                     .replacingOccurrences(of: "${APPLICATION_VERSION}", with: "1.0")
-                    .replacingOccurrences(of: "${BUNDLE_IDENTIFIER}", with: branch.project.bundleId)
-                    .replacingOccurrences(of: "${DISPLAY_NAME}", with: branch.project.title)
+                    .replacingOccurrences(of: "${BUNDLE_IDENTIFIER}", with: project.bundleId)
+                    .replacingOccurrences(of: "${DISPLAY_NAME}", with: project.title)
 
                 let response = Response(status: .ok, body: Response.Body(string: manifest))
                 return response
@@ -71,7 +71,7 @@ struct InstallController {
             .branch(by: tag, on: req.db)
 
         let responseResult = branch
-            .flatMapThrowing { branch -> Response in
+            .flatMapThrowing { _, branch -> Response in
                 let filePath = URL(fileURLWithPath: "./\(branch.tag)/\(branch.filename)")
 
                 guard let attributes = try? FileManager.default.attributesOfItem(atPath: filePath.path),
