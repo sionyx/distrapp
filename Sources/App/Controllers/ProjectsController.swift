@@ -37,8 +37,11 @@ struct ProjectsController {
             throw Abort(.notFound)
         }
 
-        let r = currentUser.$projects.get(on: req.db).map { $0.map { $0.short }}
-        return r
+        return Grant.query(on: req.db)
+            .filter(\.$user.$id == currentUser.id!)
+            .with(\.$project)
+            .all()
+            .map { $0.map { $0.project.short(with: $0.type) } }
     }
 
 

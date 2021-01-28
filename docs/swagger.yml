@@ -100,7 +100,7 @@ paths:
         content:
           application/json:
             schema:
-              $ref: '#/components/schemas/Project'
+              $ref: '#/components/schemas/NewProject'
         required: true
       responses:
         200:
@@ -411,7 +411,7 @@ components:
         place:
           type: string
           example: ci-bot
-    Project:
+    NewProject:
       type: object
       required:  # List the required properties here
       - name
@@ -430,9 +430,37 @@ components:
         description:
           type: string
           example: My Fancy Project made for friends
+    Project:
+      type: object
+      required:  # List the required properties here
+      - name
+      - title
+      - bundle_id
+      - grant
+      properties:
+        name:
+          type: string
+          example: MYFANCYPROJECT
+        title:
+          type: string
+          example: My Fancy Project
+        bundle_id:
+          type: string
+          example: com.example.myfancy
+        description:
+          type: string
+          example: My Fancy Project made for friends
         icon:
           type: string
           example: http://example.com/image.jpg
+        grant:
+          type: string
+          example: owner
+          enum:
+          - view
+          - test
+          - upload
+          - owner
     ArrayOfProjects:
       type: array
       items:

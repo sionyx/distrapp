@@ -88,8 +88,9 @@ extension Project {
         let myteamToken: String?
         let myteamUrl: String?
         let myteamId: String?
+        let grant: GrantType?
 
-        fileprivate init(_ project: Project) {
+        fileprivate init(_ project: Project, grant: GrantType? = nil) {
             self.name = project.name
             self.title = project.title
             self.bundleId = project.bundleId
@@ -100,6 +101,7 @@ extension Project {
             self.myteamToken = project.myteamToken
             self.myteamUrl = project.myteamUrl
             self.myteamId = project.myteamId
+            self.grant = grant
         }
         
         private enum CodingKeys: String, CodingKey {
@@ -113,6 +115,7 @@ extension Project {
             case myteamToken = "myteam_token"
             case myteamUrl = "myteam_url"
             case myteamId = "myteam_id"
+            case grant
         }
 
         var long: Project {
@@ -131,6 +134,10 @@ extension Project {
 
     var short: Short {
         Short(self)
+    }
+
+    func short(with grant: GrantType) -> Short {
+        Short(self, grant: grant)
     }
 }
 
