@@ -14,6 +14,43 @@ enum GrantType: String, Codable {
     case upload
     case owner
 
+    var canInvite: Bool {
+        switch self {
+        case .owner:
+            return true
+        default:
+            return false
+        }
+    }
+
+    var canEdit: Bool {
+        switch self {
+        case .owner:
+            return true
+        default:
+            return false
+        }
+    }
+
+    var canDelete: Bool {
+        switch self {
+        case .owner:
+            return true
+        default:
+            return false
+        }
+    }
+
+    var canProtect: Bool {
+        switch self {
+        case .owner:
+            return true
+        default:
+            return false
+        }
+    }
+
+
     var canUpload: Bool {
         switch self {
         case .owner, .upload:

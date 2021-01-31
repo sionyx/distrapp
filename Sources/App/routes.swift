@@ -61,6 +61,7 @@ func protectedRoutes(_ builder: RoutesBuilder, _ controllers: Controllers) {
     let projects = builder.grouped("projects")
     projects.on(.GET, use: controllers.projectsController.list)
     projects.on(.POST, use: controllers.projectsController.add)
+    projects.on(.PUT, use: controllers.projectsController.update)
     projects.on(.DELETE, use: controllers.projectsController.delete)
 
     let grants = builder.grouped("grants")
@@ -70,6 +71,7 @@ func protectedRoutes(_ builder: RoutesBuilder, _ controllers: Controllers) {
 
     let branches = builder.grouped("branches")
     branches.on(.GET, use: controllers.branchesController.list)
+    branches.on(.PUT, use: controllers.branchesController.update)
     branches.on(.DELETE, use: controllers.branchesController.delete)
 
     let upload = builder.grouped("upload")

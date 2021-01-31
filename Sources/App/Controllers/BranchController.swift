@@ -9,8 +9,10 @@ struct BranchController {
 
     func list(req: Request) throws -> EventLoopFuture<[Branch.Short]> {
         guard let currentUser = try? req.auth.require(User.self),
-              let currentUserId = currentUser.id,
-              let params = try? req.query.decode(GetProjectParams.self) else {
+              let currentUserId = currentUser.id else {
+            throw Abort(.unauthorized)
+        }
+        guard let params = try? req.query.decode(GetProjectParams.self) else {
             throw Abort(.badRequest)
         }
 
@@ -29,11 +31,52 @@ struct BranchController {
         return branches
     }
 
+    // curl -X PUT http://localhost:8080/api/v1/branches?project=MINICLOUD&branch=MINICLOUD-1234&is_protected=false&is_tested=true&description=1234567890
+    func update(_ req: Request) throws -> EventLoopFuture<HTTPStatus> {
+        guard let currentUser = try? req.auth.require(User.self),
+              let currentUserId = currentUser.id else {
+            throw Abort(.unauthorized)
+        }
+        guard let params = try? req.query.decode(PutBranchParams.self) else {
+            throw Abort(.badRequest)
+        }
+
+        let allowedProject = Project
+            .by(name: params.project, on: req.db)
+            .granted(to: currentUserId, on: req.db)
+
+        let branch = allowedProject
+            .branch(by: params.branch, on: req.db)
+
+        return branch
+            .flatMapThrowing { _, grant, branch -> EventLoopFuture<Void> in
+                if let isProtected = params.isProtected,
+                   grant.canProtect {
+                    branch.isProtected = isProtected
+                }
+
+                if let isTested = params.isTested,
+                   grant.canTest {
+                    branch.isTested = isTested
+                }
+
+                if let description = params.description ,
+                   grant.canUpload {
+                    branch.description = description
+                }
+
+                return branch.update(on: req.db)
+            }
+            .transform(to: .ok)
+    }
+
     // curl -X DELETE http://localhost:8080/branch/PULSAR-1234
     func delete(_ req: Request) throws -> EventLoopFuture<HTTPStatus> {
         guard let currentUser = try? req.auth.require(User.self),
-              let currentUserId = currentUser.id,
-              let params = try? req.query.decode(GetBranchParams.self) else {
+              let currentUserId = currentUser.id else {
+            throw Abort(.unauthorized)
+        }
+        guard let params = try? req.query.decode(GetBranchParams.self) else {
             throw Abort(.badRequest)
         }
 
@@ -63,7 +106,7 @@ struct BranchController {
     func upload(_ req: Request) throws -> EventLoopFuture<HTTPStatus> {
         guard let currentUser = try? req.auth.require(User.self),
               let currentUserId = currentUser.id else {
-            throw Abort(.badRequest)
+            throw Abort(.unauthorized)
         }
 
         guard let params = try? req.query.decode(PostBranchParams.self) else {
@@ -105,7 +148,7 @@ struct BranchController {
 
                 print(drainResult)
                 let attr = try? FileManager.default.attributesOfItem(atPath: filePath)
-                let fileSize = Int((attr?[FileAttributeKey.size] as? UInt64 ?? 0) / 1048576)
+                let fileSize = Int(attr?[FileAttributeKey.size] as? UInt64 ?? 0)
 
                 let queryResult = allowedProject
                     .flatMap { project -> EventLoopFuture<(Project, Branch?)> in

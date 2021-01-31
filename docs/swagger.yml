@@ -131,6 +131,46 @@ paths:
       security:
       - token: []
 
+    put:
+      tags:
+      - Projects
+      summary: Updates project
+      operationId: updateProject
+      parameters:
+      - name: project
+        in: query
+        description: name of project
+        required: true
+        example: MYFANCYPROJECT
+        schema:
+          type: string
+      - name: title
+        in: query
+        description: title of project
+        schema:
+          type: string
+      - name: bundle_id
+        in: query
+        description: bundle id
+        schema:
+          type: string
+      - name: description
+        in: query
+        description: description
+        schema:
+          type: string
+      responses:
+        200:
+          description: successful operation
+        400:
+          description: Invalid Project Parameters
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+      security:
+      - token: []
+
     delete:
       tags:
       - Projects
@@ -235,6 +275,59 @@ paths:
             application/json:
               schema:
                 $ref: '#/components/schemas/ArrayOfBranches'
+        400:
+          description: Invalid Project Parameters
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+        403:
+          description: Auth required
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+      security:
+      - token: []
+
+    put:
+      tags:
+      - Branches
+      summary: Updates specified branch of the project
+      operationId: updateBranch
+      parameters:
+      - name: project
+        in: query
+        description: name of project
+        required: true
+        example: MYFANCYPROJECT
+        schema:
+          type: string
+      - name: branch
+        in: query
+        description: name of branch
+        required: true
+        example: MYFANCYPROJECT-123
+        schema:
+          type: string
+      - name: is_tested
+        in: query
+        description: marks and unmarks brunch as tested
+        schema:
+          type: boolean
+      - name: is_protected
+        in: query
+        description: protects and unprotects branch
+        schema:
+          type: boolean
+      - name: description
+        in: query
+        description: description
+        schema:
+          type: string
+      responses:
+        200:
+          description: successful operation
         400:
           description: Invalid Project Parameters
           content:

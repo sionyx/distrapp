@@ -109,6 +109,22 @@ struct PostBranchParams: Content {
     let description: String?
 }
 
+struct PutBranchParams: Content {
+    let project: String
+    let branch: String
+    let isTested: Bool?
+    let isProtected: Bool?
+    let description: String?
+
+    private enum CodingKeys: String, CodingKey {
+        case project
+        case branch
+        case isTested = "is_tested"
+        case isProtected = "is_protected"
+        case description
+    }
+}
+
 extension EventLoopFuture where Value == Project {
     func branch(by tag: String, on db: Database) -> EventLoopFuture<(Project, Branch)> {
         self
@@ -118,6 +134,19 @@ extension EventLoopFuture where Value == Project {
                     .first()
                     .unwrap(or: Abort(.notFound, reason: "Branch Not Found"))
                     .map { (project, $0) }
+            }
+    }
+}
+
+extension EventLoopFuture where Value == (Project, GrantType) {
+    func branch(by tag: String, on db: Database) -> EventLoopFuture<(Project, GrantType, Branch)> {
+        self
+            .flatMap { project, grant -> EventLoopFuture<(Project, GrantType, Branch)> in
+                return project.$branches.query(on: db)
+                    .filter(\.$tag == tag)
+                    .first()
+                    .unwrap(or: Abort(.notFound, reason: "Branch Not Found"))
+                    .map { (project, grant, $0) }
             }
     }
 }

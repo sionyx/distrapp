@@ -32,15 +32,17 @@ struct GrantsController {
     // http://localhost:8080/api/v1/grants?project=MINICLOUD
     func list(_ req: Request) throws -> EventLoopFuture<[GrantWithUser]> {
         guard let currentUser = try? req.auth.require(User.self),
-              let currentUserId = currentUser.id,
-              let params = try? req.query.decode(GetProjectParams.self) else {
+              let currentUserId = currentUser.id else {
+            throw Abort(.unauthorized)
+        }
+        guard let params = try? req.query.decode(GetProjectParams.self) else {
             throw Abort(.badRequest)
         }
 
         let ownedProject = Project
             .by(name: params.project, on: req.db)
             .granted(to: currentUserId, on: req.db)
-            .isOwner()
+            .canInvite()
 
         let users = ownedProject
             .flatMap { project -> EventLoopFuture<[GrantWithUser]> in
@@ -60,8 +62,10 @@ struct GrantsController {
     // curl --header "Content-Type: application/json" --request POST --data '{"user": "mila.kirilenko@corp.mail.ru", "project": "MINICLOUD", "type": "upload"}' http://localhost:8080/api/v1/grants
     func add(_ req: Request) throws -> EventLoopFuture<HTTPStatus> {
         guard let currentUser = try? req.auth.require(User.self),
-              let currentUserId = currentUser.id,
-              let shortGrant = try? req.query.decode(Grant.Short.self),
+              let currentUserId = currentUser.id else {
+            throw Abort(.unauthorized)
+        }
+        guard let shortGrant = try? req.query.decode(Grant.Short.self),
               let shortGrantType = shortGrant.type,
               shortGrantType != .owner else {
             throw Abort(.badRequest)
@@ -70,7 +74,7 @@ struct GrantsController {
         let ownedProject = Project
             .by(name: shortGrant.project, on: req.db)
             .granted(to: currentUserId, on: req.db)
-            .isOwner()
+            .canInvite()
 
         let userToGrant = User
             .by(name: shortGrant.user, on: req.db)
@@ -92,15 +96,17 @@ struct GrantsController {
     // curl --header "Content-Type: application/json" --request DELETE --data '{"user": "mila.kirilenko@corp.mail.ru", "project": "MINICLOUD"}' http://localhost:8080/api/v1/grants
     func delete(_ req: Request) throws -> EventLoopFuture<HTTPStatus> {
         guard let currentUser = try? req.auth.require(User.self),
-              let currentUserId = currentUser.id,
-              let shortGrant = try? req.query.decode(Grant.Short.self) else {
+              let currentUserId = currentUser.id else {
+            throw Abort(.unauthorized)
+        }
+        guard let shortGrant = try? req.query.decode(Grant.Short.self) else {
             throw Abort(.badRequest)
         }
 
         let ownedProject = Project
             .by(name: shortGrant.project, on: req.db)
             .granted(to: currentUserId, on: req.db)
-            .isOwner()
+            .canInvite()
 
         let grantedUser = User
             .by(name: shortGrant.user, on: req.db)

@@ -170,10 +170,32 @@ extension EventLoopFuture where Value == Project {
 }
 
 extension EventLoopFuture where Value == (Project, GrantType) {
-    /// Checks owner access
-    func isOwner() -> EventLoopFuture<Project> {
+    /// Checks access to invite
+    func canInvite() -> EventLoopFuture<Project> {
         self
-            .guard({ $0.1 == .owner }, else: Abort(.badRequest, reason: "No Permisions To Access"))
+            .guard({ $0.1.canInvite }, else: Abort(.badRequest, reason: "No Permisions To Invite"))
+            .map { $0.0 }
+    }
+
+    /// Checks access to edit project
+    func canEdit() -> EventLoopFuture<Project> {
+        self
+            .guard({ $0.1.canEdit }, else: Abort(.badRequest, reason: "No Permisions To Delete"))
+            .map { $0.0 }
+    }
+
+
+    /// Checks access to delete
+    func canDelete() -> EventLoopFuture<Project> {
+        self
+            .guard({ $0.1.canDelete }, else: Abort(.badRequest, reason: "No Permisions To Delete"))
+            .map { $0.0 }
+    }
+
+    /// Checks access to protect
+    func canProtect() -> EventLoopFuture<Project> {
+        self
+            .guard({ $0.1.canProtect }, else: Abort(.badRequest, reason: "No Permisions To Protect"))
             .map { $0.0 }
     }
 
@@ -200,4 +222,28 @@ extension EventLoopFuture where Value == (Project, GrantType) {
 
 struct GetProjectParams: Content {
     let project: String
+}
+
+struct PutProjectParams: Content {
+    let project: String
+    let title: String?
+    let bundleId: String?
+    let description: String?
+    let telegramToken: String?
+    let telegramId: String?
+    let myteamToken: String?
+    let myteamUrl: String?
+    let myteamId: String?
+
+    private enum CodingKeys: String, CodingKey {
+        case project
+        case title
+        case bundleId = "bundle_id"
+        case description
+        case telegramToken = "telegram_token"
+        case telegramId = "telegram_id"
+        case myteamToken = "myteam_token"
+        case myteamUrl = "myteam_url"
+        case myteamId = "myteam_id"
+    }
 }

@@ -31,10 +31,10 @@ struct ProjectsController {
         return responseResult
     }
 
-    // http://localhost:8080/projects
+    // http://localhost:8080/api/v1/projects
     func list(req: Request) throws -> EventLoopFuture<[Project.Short]> {
         guard let currentUser = try? req.auth.require(User.self) else {
-            throw Abort(.notFound)
+            throw Abort(.unauthorized)
         }
 
         return Grant.query(on: req.db)
@@ -47,8 +47,10 @@ struct ProjectsController {
 
     // curl --header "Content-Type: application/json" --header "Authorization: Bearer XXXX" --request POST --data '{"name": "SMOTRI", "title": "Смотри Mail.ru"}' http://localhost:8080/projects
     func add(_ req: Request) throws -> EventLoopFuture<HTTPStatus> {
-        guard let currentUser = try? req.auth.require(User.self),
-              let shortProject = try? req.content.decode(Project.Short.self) else {
+        guard let currentUser = try? req.auth.require(User.self) else {
+            throw Abort(.unauthorized)
+        }
+        guard let shortProject = try? req.content.decode(Project.Short.self) else {
             throw Abort(.badRequest)
         }
 
@@ -68,18 +70,53 @@ struct ProjectsController {
     }
 
 
+    // curl -X PUT http://localhost:8080/api/v1/projects?project=MINICLOUD
+    func update(_ req: Request) throws -> EventLoopFuture<HTTPStatus> {
+        guard let currentUser = try? req.auth.require(User.self),
+              let currentUserId = currentUser.id else {
+            throw Abort(.unauthorized)
+        }
+        guard let params = try? req.query.decode(PutProjectParams.self) else {
+            throw Abort(.badRequest)
+        }
+
+        let project = Project
+            .by(name: params.project, on: req.db)
+            .granted(to: currentUserId, on: req.db)
+            .canEdit()
+
+
+        return project
+            .flatMapThrowing {project -> EventLoopFuture<Void> in
+                project.title = params.title?.nonEmptyValue ?? project.title
+                project.bundleId = params.bundleId?.nonEmptyValue ?? project.bundleId
+                project.description = params.description ?? project.description
+                project.telegramToken = params.telegramToken ?? project.telegramToken
+                project.telegramId = params.telegramId ?? project.telegramId
+                project.myteamToken = params.myteamToken ?? project.myteamToken
+                project.myteamUrl = params.myteamUrl ?? project.myteamUrl
+                project.myteamId = params.myteamId ?? project.myteamId
+
+                return project.update(on: req.db)
+            }
+            .transform(to: .ok)
+    }
+
+
     // curl -X DELETE http://localhost:8080/api/v1/projects?project=MINICLOUD
     func delete(_ req: Request) throws -> EventLoopFuture<Response> {
         guard let currentUser = try? req.auth.require(User.self),
-              let currentUserId = currentUser.id,
-              let params = try? req.query.decode(GetProjectParams.self) else {
+              let currentUserId = currentUser.id else {
+            throw Abort(.unauthorized)
+        }
+        guard let params = try? req.query.decode(GetProjectParams.self) else {
             throw Abort(.badRequest)
         }
 
         let ownedProject = Project
             .by(name: params.project, on: req.db)
             .granted(to: currentUserId, on: req.db)
-            .isOwner()
+            .canDelete()
 
         return ownedProject
             .flatMap { project -> EventLoopFuture<Void> in
