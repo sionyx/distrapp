@@ -103,13 +103,14 @@ struct BranchController {
 
 
     //curl -X POST -v --header "Authorization: Bearer XXXX" --data-binary @Channel-Alpha.ipa "http://localhost:8080/api/v1/upload?project=MINICLOUD&branch=MINICLOUD-1234&description=4321&filename=Channel-Alpha.ipa"
-    func upload(_ req: Request) throws -> EventLoopFuture<HTTPStatus> {
+    func upload(_ req: Request) throws -> EventLoopFuture<Response> {
         guard let currentUser = try? req.auth.require(User.self),
               let currentUserId = currentUser.id else {
             throw Abort(.unauthorized)
         }
 
-        guard let params = try? req.query.decode(PostBranchParams.self) else {
+        guard let params = try? req.query.decode(PostBranchParams.self),
+              let host = req.headers.first(name: "Host") else {
             throw Abort(.badRequest)
         }
 
@@ -124,7 +125,7 @@ struct BranchController {
             throw Abort(.internalServerError)
         }
 
-        let requestResult = req.eventLoop.makePromise(of: HTTPStatus.self)
+        let requestResult = req.eventLoop.makePromise(of: Response.self)
         req.body.drain { drainResult in
             switch drainResult {
             case .buffer(let buffer):
@@ -172,9 +173,10 @@ struct BranchController {
                         saveResult.whenComplete { result in
                             switch result {
                             case .success:
-                                requestResult.succeed(.ok)
+                                let installUrl = "https://\(host)/install/\(project.name)/\(brunchToSave.tag)"
+                                requestResult.succeed(Response(status: .ok, body: Response.Body(string: installUrl)))
                             case .failure:
-                                requestResult.succeed(.internalServerError)
+                                requestResult.succeed(Response(status: .internalServerError))
                             }
                         }
 
