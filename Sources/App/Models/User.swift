@@ -53,8 +53,6 @@ final class User: Model {
 
 }
 
-extension User: Authenticatable {}
-
 extension User {
     func generateToken(place: String) throws -> UserToken {
         try UserToken(value: (0..<64).map { _ in Int.random(in: 0...15) }.reduce("") { $0 + String(format:"%01X", $1) },
@@ -103,3 +101,18 @@ extension User {
             .guard({ $0.id != nil }, else: Abort(.internalServerError, reason: "User Has No Id"))
     }
 }
+
+// MARK: - Authenication
+
+extension User: Authenticatable {}
+extension User: ModelSessionAuthenticatable { }
+
+//extension User: ModelCredentialsAuthenticatable {
+//    static let usernameKey = \User.$authId
+//    static let passwordHashKey = \User.$authProvider
+//
+//    func verify(password: String) throws -> Bool {
+//        //try Bcrypt.verify(password, created: self.password)
+//        return true
+//    }
+//}

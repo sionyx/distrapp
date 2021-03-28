@@ -1,0 +1,13 @@
+#extend("base"):
+    #export("body"):
+        <ul class="list-group">
+            #for(project in projects):
+            <li class="list-group-item">
+                <a href="/projects/#(project.name)">#(project.name)</a>
+                <p class="mb-0 mt-0"><small>Role: #(project.grant)</small></p>
+            </li>
+            #endfor
+        </ul>
+    #endexport
+#endextend
+

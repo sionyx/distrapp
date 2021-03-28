@@ -2,6 +2,7 @@ import Fluent
 import FluentMySQLDriver
 import Vapor
 import QueuesFluentDriver
+import Leaf
 
 // configures your application
 public func configure(_ app: Application) throws {
@@ -29,6 +30,9 @@ public func configure(_ app: Application) throws {
 
     MyTeam.Configuration.token = myteamToken
 
+    app.http.server.configuration.hostname = "127.0.0.1"
+    app.http.server.configuration.port = 8080
+
     app.databases.use(.mysql(configuration: config, maxConnectionsPerEventLoop: 8), as: .mysql)
     app.migrations.add(CreateUsers())
     app.migrations.add(CreateProjects())
@@ -36,6 +40,7 @@ public func configure(_ app: Application) throws {
     app.migrations.add(CreateBranches())
     app.migrations.add(CreateUserToken())
     app.migrations.add(CreateOneTimeCodes())
+    app.migrations.add(SessionRecord.migration)
 
     // Queues
     app.migrations.add(JobModelMigrate())
@@ -59,6 +64,9 @@ public func configure(_ app: Application) throws {
 
     // register routes
     try routes(app)
+
+    app.sessions.use(.fluent)
+    app.views.use(.leaf)
 
     // MyTeam Bot
     let botListener = app.myTeamListener

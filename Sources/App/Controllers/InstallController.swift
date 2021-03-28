@@ -13,7 +13,8 @@ struct InstallController {
     func install(_ req: Request) throws -> EventLoopFuture<Response> {
         guard let project = req.parameters.get("project"),
               let tag = req.parameters.get("tag"),
-              let host = req.headers.first(name: "Host") else {
+              let host = req.headers.first(name: "Host"),
+              let ua = req.headers.first(name: "User-Agent") else {
             throw Abort(.badRequest)
         }
 
@@ -22,9 +23,17 @@ struct InstallController {
             .branch(by: tag, on: req.db)
 
         return branch
-            .map { project, brunch -> Response in
+            .map { project, branch -> Response in
                 // <a href="itms-services://?action=download-manifest&url=https://your.domain.com/your-app/manifest.plist">Awesome App</a>
-                let response = req.redirect(to: "itms-services://?action=download-manifest&url=https://\(host)/install/\(project.name)/\(brunch.tag)/manifest.plist", type: .temporary)
+                let url: String
+                if ua.contains("iPhone OS") {
+                    url = "itms-services://?action=download-manifest&url=https://\(host)/install/\(project.name)/\(branch.tag)/manifest.plist"
+                }
+                else {
+                    url = "http://\(host)/projects/\(project.name)/\(branch.tag)"
+                }
+
+                let response = req.redirect(to: url, type: .temporary)
                 return response
             }
     }

@@ -70,6 +70,21 @@ enum GrantType: String, Codable {
     }
 }
 
+extension GrantType: CustomStringConvertible {
+    var description: String {
+        switch self {
+        case .owner:
+            return "Owner"
+        case .upload:
+            return "Developer"
+        case .test:
+            return "Tester"
+        case .view:
+            return "User"
+        }
+    }
+}
+
 final class Grant: Model {
     static let schema = "grants"
 

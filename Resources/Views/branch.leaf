@@ -1,0 +1,41 @@
+#extend("base"):
+    #export("body"):
+        <div class="card" >
+            <h5 class="card-header">
+                #(branch.tag)
+            </h5>
+            <ul class="list-group list-group-flush">
+                #if(branch.description):
+                <li class="list-group-item">#(branch.description)</li>
+                #endif
+                <li class="list-group-item">
+                    <p class="mb-0">Build: #(branch.build_number)</p>
+                    <p class="mb-0 mt-0">Created: #date(branch.created, "yyyy-MM-dd hh:mm")</p>
+                    <p class="mb-0 mt-0">Updated: #date(branch.updated, "yyyy-MM-dd hh:mm")</p>
+                    <p class="mb-0 mt-0">Size: #(branch.size)</p>
+                    <p class="mb-0 mt-0 #if(branch.is_tested):text-success#else:text-danger#endif" >#if(branch.is_tested):Tested#else:Not Tested#endif</p>
+                </li>
+                #if(installUrl || canTest):
+                <li class="list-group-item">
+                    #if(installUrl):
+                    <div class="d-grid gap-2">
+                        <a href="#(installUrl)" class="btn btn-primary mb-1 mt-1">Install</a>
+                    </div>
+                    #endif
+                    #if(canTest):
+                        #if(branch.is_tested):
+                        <div class="d-grid gap-2">
+                            <a href="#" class="btn btn-outline-danger mb-1 mt-1">Mark Not Tested</a>
+                        </div>
+                        #else:
+                        <div class="d-grid gap-2">
+                            <a href="#" class="btn btn-success mb-1 mt-1">Mark Tested</a>
+                        </div>
+                        #endif
+                    #endif
+                </li>
+                #endif
+            </ul>
+        </div>
+    #endexport
+#endextend

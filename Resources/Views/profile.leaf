@@ -1,0 +1,7 @@
+#extend("base"):
+    #export("body"):
+        <h1>#(title)</h1>
+        <p>#(user.first_name) #(user.last_name)</p>
+    #endexport
+#endextend
+

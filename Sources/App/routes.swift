@@ -1,5 +1,6 @@
 import Fluent
 import Vapor
+import Leaf
 
 struct Controllers {
     let authController = AuthController()
@@ -8,6 +9,7 @@ struct Controllers {
     let grantsController = GrantsController()
     let branchesController = BranchController()
     let installController = InstallController()
+    let websiteController = WebsiteController()
 
     private init() { }
     static var shared: Controllers = {
@@ -16,25 +18,23 @@ struct Controllers {
 }
 
 func routes(_ app: Application) throws {
-    app.get { req -> Response in
-        guard let host = req.headers.first(name: "Host") else {
-            throw Abort(.badRequest)
-        }
-
-        return req.redirect(to: "https://\(host)/docs/", type: .permanent)
-    }
-
-
     let api = app.grouped("api")
     let apiV1 = api.grouped("v1")
     let tokenProtected = apiV1.grouped(UserToken.authenticator())
+    let sessioned = app.grouped(app.sessions.middleware).grouped(User.sessionAuthenticator())
+    let sessionProtected = sessioned.grouped(User.redirectMiddleware(path: "/login?loginRequired=1"))
 
 
     directRoutes(app, Controllers.shared)
     unprotectedRoutes(apiV1, Controllers.shared)
     protectedRoutes(tokenProtected, Controllers.shared)
+
+    websiteRoutes(sessioned, Controllers.shared)
+    sessionRoutes(sessionProtected, Controllers.shared)
+
     #if DEBUG
-    debugRoutes(app, Controllers.shared)
+    let debug = app.grouped("debug")
+    debugRoutes(debug, Controllers.shared)
     #endif
 }
 
@@ -77,6 +77,21 @@ func protectedRoutes(_ builder: RoutesBuilder, _ controllers: Controllers) {
     let upload = builder.grouped("upload")
     upload.on(.POST, body: .stream, use: controllers.branchesController.upload)
 }
+
+func websiteRoutes(_ builder: RoutesBuilder, _ controllers: Controllers) {
+    builder.on(.GET, use: controllers.websiteController.indexHandler)
+    builder.on(.GET, "login", use: controllers.websiteController.loginHandler)
+    builder.on(.POST, "authorize", use: controllers.websiteController.authDoneHandler)
+
+    builder.on(.GET, "projects", ":project", ":branch", use: controllers.websiteController.branchHandler)
+}
+
+func sessionRoutes(_ builder: RoutesBuilder, _ controllers: Controllers) {
+    builder.on(.GET, "profile", use: controllers.websiteController.profileHandler)
+    builder.on(.GET, "projects", use: controllers.websiteController.projectsHandler)
+    builder.on(.GET, "projects", ":project", use: controllers.websiteController.branchesHandler)
+}
+
 
 
 // MARK: Debug routes

@@ -167,6 +167,25 @@ extension EventLoopFuture where Value == Project {
                     .map { (project, $0.type) }
             }
     }
+
+    func grantedOrNot(to userId: UUID?, on db: Database) -> EventLoopFuture<(Project, GrantType?)> {
+        guard let userId = userId else {
+            return self.map { ($0, nil) }
+        }
+
+        return self
+            .guard({ $0.id != nil }, else: Abort(.internalServerError, reason: "Project Has No Id"))
+            .flatMap { project -> EventLoopFuture<(Project, GrantType?)> in
+                return Grant.query(on: db)
+                    .group(.and) { group in
+                        group
+                            .filter(\.$user.$id == userId)
+                            .filter(\.$project.$id == project.id!)
+                    }
+                    .first()
+                    .map { (project, $0?.type) }
+            }
+    }
 }
 
 extension EventLoopFuture where Value == (Project, GrantType) {

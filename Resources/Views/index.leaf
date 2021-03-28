@@ -1,0 +1,5 @@
+#extend("base"):
+    #export("body"):
+        <p>Welcome to distr.app</p>
+    #endexport
+#endextend
