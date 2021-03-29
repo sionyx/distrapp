@@ -81,7 +81,7 @@ struct InstallController {
 
         let responseResult = branch
             .flatMapThrowing { _, branch -> Response in
-                let filePath = URL(fileURLWithPath: "./\(branch.tag)/\(branch.filename)")
+                let filePath = URL(fileURLWithPath: "./builds/\(branch.tag)/\(branch.filename)")
 
                 guard let attributes = try? FileManager.default.attributesOfItem(atPath: filePath.path),
                       let fileSize = (attributes[.size] as? NSNumber)?.intValue else {

@@ -115,11 +115,11 @@ struct BranchController {
         }
 
         // create dir
-        let dirPath = URL(fileURLWithPath: "./\(params.branch)")
+        let dirPath = URL(fileURLWithPath: "./builds/\(params.branch)")
         print("dir path: \(dirPath.absoluteString)")
         try FileManager.default.createDirectory(atPath: dirPath.path, withIntermediateDirectories: true, attributes: nil)
 
-        let filePath = URL(fileURLWithPath: "./\(params.branch)/\(params.filename)").path
+        let filePath = URL(fileURLWithPath: "./builds/\(params.branch)/\(params.filename)").path
         guard FileManager.default.createFile(atPath: filePath, contents: nil, attributes: nil),
               let fileHandle = FileHandle(forWritingAtPath: filePath) else {
             throw Abort(.internalServerError)
