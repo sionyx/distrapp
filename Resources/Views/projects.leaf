@@ -1,13 +1,29 @@
 #extend("base"):
     #export("body"):
-        <ul class="list-group">
+        <div class="list-group shadow-sm">
+            <p class="list-group-item list-group-item-secondary m-0">
+                Projects
+            </p>
             #for(project in projects):
-            <li class="list-group-item">
-                <a href="/projects/#(project.name)">#(project.name)</a>
-                <p class="mb-0 mt-0"><small>Role: #(project.grant)</small></p>
-            </li>
+            <a class="list-group-item list-group-item-action" href="/projects/#(project.name)">
+                <div class="row">
+                    #if(project.icon):
+                    <div class="col-md-auto">
+                        <img src="#(project.icon)" class="rounded" style="width:32px;height:32mipx;object-fit:cover;">
+                    </div>
+                    #endif
+                    <div class="col d-flex align-items-center">
+                        <p class="m-0">
+                            #(project.title)
+                        </p>
+                    </div>
+                    <div class="col-md-auto d-flex align-items-center">
+                        <p class="col-md-auto m-0"><small>Role: #(project.grant)</small></p>
+                    </div>
+                </div>
+            </a>
             #endfor
-        </ul>
+        </div>
     #endexport
 #endextend
 

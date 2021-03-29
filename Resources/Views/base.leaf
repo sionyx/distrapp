@@ -10,7 +10,7 @@
       <nav class="navbar navbar-expand-sm navbar-dark bg-dark" aria-label="breadcrumb">
           <div class="container-fluid">
               <a class="navbar-brand" href="/">
-                  <!--img src="/docs/5.0/assets/brand/bootstrap-logo.svg" alt="" width="30" height="24" class="d-inline-block align-text-top" -->
+                  <img src="/images/distrapp64.png" alt="" width="32" height="32" class="d-inline-block rounded">
                   distr.app
               </a>
               <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbarToggleContent" aria-controls="navbarToggleContent" aria-expanded="false" aria-label="Toggle navigation">

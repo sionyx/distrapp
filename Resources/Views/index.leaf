@@ -1,5 +1,34 @@
 #extend("base"):
     #export("body"):
         <p>Welcome to distr.app</p>
+
+        <div class="row row-cols-1 row-cols-md-3 g-4">
+            <div class="col">
+                <div class="card text-dark bg-light mb-3 shadow-sm" >
+                    <div class="card-header">Users</div>
+                    <div class="card-body">
+                        <p class="card-text">Users registered: 1</p>
+                    </div>
+                </div>
+            </div>
+
+            <div class="col">
+                <div class="card text-dark bg-light mb-3 shadow-sm" >
+                    <div class="card-header">Projects</div>
+                    <div class="card-body">
+                        <p class="card-text">Projects created: 2</p>
+                    </div>
+                </div>
+            </div>
+
+            <div class="col">
+                <div class="card text-dark bg-light mb-3 shadow-sm" >
+                    <div class="card-header">Builds</div>
+                    <div class="card-body">
+                    <p class="card-text">Builds uploaded: 5</p>
+                    </div>
+                </div>
+            </div>
+        </div>
     #endexport
 #endextend

@@ -1,31 +1,57 @@
 #extend("base"):
     #export("body"):
-        <div class="card" >
-            <h5 class="card-header">
-                #(branch.tag)
-            </h5>
+        <div class="card shadow-sm" >
+            <div class="card-header">
+                <div class="row">
+                    #if(project.icon):
+                    <div class="col-md-auto">
+                        <img src="#(project.icon)" class="img-thumbnail" style="width:64px;height:64px;object-fit:cover;">
+                    </div>
+                    #endif
+                    <div class="col align-items-center">
+                        <p class="m-0">#(project.title)</p>
+                        <h5 class="m-0">
+                            #(branch.tag)
+                        </h5>
+                    </div>
+                </div>
+            </div>
+
             <ul class="list-group list-group-flush">
                 #if(branch.description):
                 <li class="list-group-item">#(branch.description)</li>
                 #endif
                 <li class="list-group-item">
                     <p class="mb-0">Build: #(branch.build_number)</p>
-                    <p class="mb-0 mt-0">Created: #date(branch.created, "yyyy-MM-dd hh:mm")</p>
-                    <p class="mb-0 mt-0">Updated: #date(branch.updated, "yyyy-MM-dd hh:mm")</p>
-                    <p class="mb-0 mt-0">Size: #(branch.size)</p>
-                    <p class="mb-0 mt-0 #if(branch.is_tested):text-success#else:text-danger#endif" >#if(branch.is_tested):Tested#else:Not Tested#endif</p>
+                    <p class="my-0">Created: #date(branch.created, "yyyy-MM-dd hh:mm")</p>
+                    <p class="my-0">Updated: #date(branch.updated, "yyyy-MM-dd hh:mm")</p>
+                    <p class="my-0">Size: #(branch.size)</p>
+                    #if(branch.is_tested):
+                    <p class="my-0 text-success">Tested
+                        <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" fill="currentColor" class="bi bi-check-circle-fill" viewBox="0 0 16 16">
+                            <path d="M16 8A8 8 0 1 1 0 8a8 8 0 0 1 16 0zm-3.97-3.03a.75.75 0 0 0-1.08.022L7.477 9.417 5.384 7.323a.75.75 0 0 0-1.06 1.06L6.97 11.03a.75.75 0 0 0 1.079-.02l3.992-4.99a.75.75 0 0 0-.01-1.05z"/>
+                        </svg>
+                    </p>
+                    #else:
+                    <p class="my-0 text-danger">Not Tested
+                        <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" fill="currentColor" class="bi bi-circle" viewBox="0 0 16 16">
+                            <path d="M8 15A7 7 0 1 1 8 1a7 7 0 0 1 0 14zm0 1A8 8 0 1 0 8 0a8 8 0 0 0 0 16z"/>
+                        </svg>
+                    </p>
+                    #endif
                 </li>
                 #if(installUrl || canTest):
                 <li class="list-group-item">
+                    <div class="row row-cols-1 row-cols-md-4">
                     #if(installUrl):
-                    <div class="d-grid gap-2">
-                        <a href="#(installUrl)" class="btn btn-primary mb-1 mt-1">Install</a>
-                    </div>
+                        <div class="col d-grid">
+                            <a href="#(installUrl)" class="btn btn-primary my-1">Install</a>
+                        </div>
                     #endif
                     #if(canTest):
                         #if(branch.is_tested):
-                        <div class="d-grid gap-2">
-                            <a href="#" class="btn btn-outline-danger mb-1 mt-1">Mark Not Tested</a>
+                        <div class="col d-grid">
+                            <a href="#" class="btn btn-outline-danger my-1">Mark Not Tested</a>
                         </div>
                         #else:
                         <div class="d-grid gap-2">

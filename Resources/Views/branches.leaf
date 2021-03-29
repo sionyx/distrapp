@@ -1,37 +1,56 @@
 #extend("base"):
     #export("body"):
 
-    <div class="container">
+    <div class="list-group shadow-sm mb-2">
+    <div class="list-group-item container">
         <div class="row">
             #if(project.icon):
             <div class="col-md-auto">
-                <img src="#(project.icon)" class="rounded" style="width:64px;height:64px;object-fit:cover;">
+                <img src="#(project.icon)" class="img-thumbnail" style="width:64px;height:64px;object-fit:cover;">
             </div>
             #endif
             <div class="col">
                 <p class="mb-0 mt-0"><strong>#(project.title)</strong></p>
                 <p class="mb-0 mt-0">Platform: iOS</p>
-                <p class="mb-0 mt-0">Platform: iOS</p>
             </div>
             <!--div class="col-md-auto">
                 <a href="/projects/#(project.name)/members" class="btn btn-primary">Members</a>
             </div-->
+        </div>
     </div>
 
 
-    #if(project.description):
-    <p class="mb-0"><strong>Description</strong></p>
-    <p class="mt-0">#(project.description)</p>
-    #endif
+        #if(project.description):
+        <div class="list-group-item">
+            <p class="m-0"><strong>Description</strong></p>
+            <p class="m-0">#(project.description)</p>
+        </div>
+        #endif
+    </div>
 
-    <ul class="list-group">
+    <div class="list-group shadow-sm">
+        <p class="list-group-item list-group-item-secondary m-0">
+            Branches
+        </p>
+
         #for(branch in branches):
-        <li class="list-group-item">
-            <a href="/projects/#(project.name)/#(branch.tag)">#(branch.tag)</a>
-            <p class="mb-0 mt-0"><small>Build #(branch.build_number) at #date(branch.updated, "yyyy-MM-dd hh:mm")</small></p>
-        </li>
+        <a class="list-group-item list-group-item-action" href="/projects/#(project.name)/#(branch.tag)">
+            <div class="row">
+                <div class="col d-flex align-items-center">
+                    <p class="m-0">
+                        #(branch.tag)
+                    </p>
+                </div>
+                <div class="col-md-auto d-flex align-items-center">
+                    <p class="col-md-auto m-0"><small>Build #(branch.build_number)</small></p>
+                </div>
+                <div class="col-md-auto d-flex align-items-center">
+                    <p class="col-md-auto m-0"><small>#date(branch.updated, "yyyy-MM-dd hh:mm")</small></p>
+                </div>
+            </div>
+        </a>
         #endfor
-    </ul>
+    </div>
 
     #endexport
 #endextend
