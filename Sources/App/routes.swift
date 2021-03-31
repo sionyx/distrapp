@@ -81,13 +81,17 @@ func protectedRoutes(_ builder: RoutesBuilder, _ controllers: Controllers) {
 func websiteRoutes(_ builder: RoutesBuilder, _ controllers: Controllers) {
     builder.on(.GET, use: controllers.websiteController.indexHandler)
     builder.on(.GET, "login", use: controllers.websiteController.loginHandler)
-    builder.on(.POST, "authorize", use: controllers.websiteController.authDoneHandler)
+    builder.grouped(User.credentialsAuthenticator())
+           .on(.POST, "login", use: controllers.websiteController.loginDoneHandler)
 
     builder.on(.GET, "projects", ":project", ":branch", use: controllers.websiteController.branchHandler)
 }
 
 func sessionRoutes(_ builder: RoutesBuilder, _ controllers: Controllers) {
     builder.on(.GET, "profile", use: controllers.websiteController.profileHandler)
+    builder.on(.GET, "changepassword", use: controllers.websiteController.changePasswordHandler)
+    builder.on(.POST, "changepassword", use: controllers.websiteController.changePasswordDoneHandler)
+
     builder.on(.GET, "projects", use: controllers.websiteController.projectsHandler)
     builder.on(.GET, "projects", ":project", use: controllers.websiteController.branchesHandler)
 }

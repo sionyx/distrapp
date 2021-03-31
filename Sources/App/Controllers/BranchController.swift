@@ -90,10 +90,10 @@ struct BranchController {
 
         return branch
             .flatMapThrowing { _, branch -> EventLoopFuture<Void> in
-                let filePath = URL(fileURLWithPath: "./\(branch.tag)/\(branch.filename)")
+                let filePath = URL(fileURLWithPath: "./builds/\(params.project)/\(branch.tag)/\(branch.filename)")
                 try FileManager.default.removeItem(at: filePath)
 
-                let dirPath = URL(fileURLWithPath: "./\(branch.tag)")
+                let dirPath = URL(fileURLWithPath: "./builds/\(params.project)/\(branch.tag)")
                 try FileManager.default.removeItem(at: dirPath)
 
                 return branch.delete(on: req.db)

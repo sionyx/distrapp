@@ -41,6 +41,7 @@ public func configure(_ app: Application) throws {
     app.migrations.add(CreateUserToken())
     app.migrations.add(CreateOneTimeCodes())
     app.migrations.add(SessionRecord.migration)
+    app.migrations.add(UserPassword())
 
     // Queues
     app.migrations.add(JobModelMigrate())

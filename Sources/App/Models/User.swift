@@ -35,6 +35,9 @@ final class User: Model {
     @Field(key: "auth_id")
     var authId: String
 
+    @Field(key: "password")
+    var password: String
+
     @Siblings(through: Grant.self, from: \.$user, to: \.$project)
     public var projects: [Project]
 
@@ -107,12 +110,16 @@ extension User {
 extension User: Authenticatable {}
 extension User: ModelSessionAuthenticatable { }
 
-//extension User: ModelCredentialsAuthenticatable {
-//    static let usernameKey = \User.$authId
-//    static let passwordHashKey = \User.$authProvider
-//
-//    func verify(password: String) throws -> Bool {
-//        //try Bcrypt.verify(password, created: self.password)
-//        return true
-//    }
-//}
+extension User: ModelCredentialsAuthenticatable {
+    static let usernameKey = \User.$authId
+    static let passwordHashKey = \User.$password
+
+    func verify(password: String) throws -> Bool {
+        if self.password == "" {
+            return true
+        }
+        
+        _ = try Bcrypt.verify(password, created: self.password)
+        return true
+    }
+}
