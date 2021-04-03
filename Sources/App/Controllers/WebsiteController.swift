@@ -14,17 +14,40 @@ struct WebsiteController {
 
     func indexHandler(_ req: Request) throws -> EventLoopFuture<View> {
         let user = try? req.auth.require(User.self)
-        return req.view.render("index", IndexContent(user: user?.short))
+
+        return User.query(on: req.db)
+            .count()
+            .flatMap { users in
+                Project.query(on: req.db)
+                    .count()
+                    .map { (users, $0) }
+            }
+            .flatMap { users, projects in
+                Branch.query(on: req.db)
+                    .count()
+                    .map { (users, projects, $0) }
+            }
+            .flatMap { users, projects, branches in
+                return req.view.render("index", IndexContent(user: user?.short,
+                                                             users: users,
+                                                             projects: projects,
+                                                             branches: branches))
+            }
     }
 
     func loginHandler(_ req: Request) throws -> EventLoopFuture<View> {
         let user = try? req.auth.require(User.self)
-        return req.view.render("login", LoginContent(user: user?.short))
+        if user != nil {
+            throw Abort.redirect(to: "/profile")
+        }
+
+        let params = try? req.query.decode(LoginParams.self)
+        return req.view.render("login", LoginContent(user: user?.short, email: params?.email))
     }
 
     func loginDoneHandler(_ req: Request) throws -> Response {
         guard let user = try? req.auth.require(User.self) else {
-            return req.redirect(to: "/login?invalid=1")
+            throw Abort.redirect(to: "/login?invalid=1")
         }
 
         if user.password == "" {
@@ -32,6 +55,50 @@ struct WebsiteController {
         }
 
         return req.redirect(to: "/projects")
+    }
+
+    func signupHandler(_ req: Request) throws -> EventLoopFuture<View> {
+        let user = try? req.auth.require(User.self)
+        if user != nil {
+            throw Abort.redirect(to: "/profile")
+        }
+
+        return req.view.render("signup", SignupContent(user: user?.short))
+    }
+
+    func signupDoneHandler(_ req: Request) throws -> EventLoopFuture<Response> {
+        guard let params = try? req.content.decode(SignupParams.self) else {
+            throw Abort.redirect(to: "/signup?empty=1")
+        }
+
+        guard params.email.isValidEmail,
+              params.password.isValidPassword,
+              params.firstName.count > 2,
+              params.lastName.count > 2,
+              let digest = try? Bcrypt.hash(params.password) else {
+            throw Abort.redirect(to: "/signup?invalid=1")
+        }
+
+        return User.query(on: req.db)
+            .filter(\.$authId == params.email)
+            .first()
+            .flatMap { user in
+                if user != nil {
+                    return req.eventLoop.makeSucceededFuture(req.redirect(to: "/login?email=\(params.email)"))
+                }
+                let user = User(firstName: params.firstName,
+                                lastName: params.lastName,
+                                authProvider: "site",
+                                authId: params.email,
+                                password: digest)
+                let save = user.create(on: req.db)
+
+                save.whenComplete({ _ in
+                    req.auth.login(user)
+                })
+
+                return save.transform(to: req.redirect(to: "/profile"))
+            }
     }
 
     func authDoneHandler(_ req: Request) throws -> EventLoopFuture<Response> {
@@ -72,25 +139,25 @@ struct WebsiteController {
     }
 
     func changePasswordDoneHandler(_ req: Request) throws -> EventLoopFuture<Response> {
-        enum PasswordError: Error {
-            case invalidChar
-        }
-        let validchars = "ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz1234567890-=!@#$%^&*()_+<>/\\;:'\"[]{}~`"
         guard let user = try? req.auth.require(User.self),
               let params = try? req.content.decode(NewPassParams.self) else {
             throw Abort(.badRequest)
         }
 
         guard params.password == params.password2,
-              params.password.count > 8,
-              params.password.reduce(true, { $0 && validchars.contains($1) } ),
+              params.password.isValidPassword,
               let digest = try? Bcrypt.hash(params.password) else {
-            return req.eventLoop.makeSucceededFuture(req.redirect(to: "/changepassword"))
+            throw Abort.redirect(to: "/changepassword")
         }
 
         user.password = digest
         return user.save(on: req.db)
             .transform(to: req.redirect(to: "/profile"))
+    }
+
+    func logoutHandler(_ req: Request) throws -> Response {
+        req.auth.logout(User.self)
+        return req.redirect(to: "/")
     }
 
     func projectsHandler(_ req: Request) throws -> EventLoopFuture<View> {
@@ -166,6 +233,10 @@ struct WebsiteController {
 
 }
 
+struct LoginParams: Content {
+    let email: String?
+}
+
 struct WebAuthParams: Content {
     let email: String
     let token: String
@@ -176,6 +247,13 @@ struct NewPassParams: Content {
     let password2: String
 }
 
+struct SignupParams: Content {
+    let firstName: String
+    let lastName: String
+    let email: String
+    let password: String
+}
+
 protocol WebSiteContent: Content {
     var title: String { get }
     var user: User.Short? { get }
@@ -184,10 +262,19 @@ protocol WebSiteContent: Content {
 struct IndexContent: WebSiteContent {
     var title = "Home"
     let user: User.Short?
+    let users: Int
+    let projects: Int
+    let branches: Int
 }
 
 struct LoginContent: WebSiteContent {
     var title = "Login"
+    let user: User.Short?
+    let email: String?
+}
+
+struct SignupContent: WebSiteContent {
+    var title = "Sign Up"
     let user: User.Short?
 }
 

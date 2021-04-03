@@ -43,12 +43,13 @@ final class User: Model {
 
     init() { }
 
-    init(id: UUID? = nil, firstName: String, lastName: String, authProvider: String, authId: String, userPic: String? = nil, created: Date? = nil, updated: Date? = nil) {
+    init(id: UUID? = nil, firstName: String, lastName: String, authProvider: String, authId: String, password: String, userPic: String? = nil, created: Date? = nil, updated: Date? = nil) {
         self.id = id
         self.created = created
         self.updated = updated
         self.firstName = firstName
         self.lastName = lastName
+        self.password = password
         self.userPic = userPic
         self.authProvider = authProvider
         self.authId = authId

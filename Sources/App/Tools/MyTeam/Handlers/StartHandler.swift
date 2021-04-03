@@ -40,7 +40,7 @@ extension MyTeam {
                         reply = self.bot.sendMessage("User Info Updated", to: mtUser.userId)
                     }
                     else {
-                        userToSave = User(firstName: mtUser.firstName, lastName: mtUser.lastName, authProvider: "myteam", authId: mtUser.userId)
+                        userToSave = User(firstName: mtUser.firstName, lastName: mtUser.lastName, authProvider: "myteam", authId: mtUser.userId, password: "")
                         reply = self.bot.sendMessage("Welcome to distr.app! User Created", to: mtUser.userId)
                     }
 

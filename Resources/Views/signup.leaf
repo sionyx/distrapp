@@ -1,0 +1,40 @@
+#extend("base"):
+    #export("body"):
+    <form class="row g-3" action="/signup" method="post">
+        <div class="col-md-6">
+            <label for="firstName" class="form-label">First name</label>
+            <input type="text" name="firstName" class="form-control" id="firstName" value="" autofocus required>
+            <div class="valid-feedback">
+                Looks good!
+            </div>
+        </div>
+
+        <div class="col-md-6">
+            <label for="lastName" class="form-label">Last name</label>
+            <input type="text" name="lastName" class="form-control" id="lastName" value="" required>
+            <div class="valid-feedback">
+                Looks good!
+            </div>
+        </div>
+
+        <div class="col-md-6">
+            <label for="username" class="form-label">Email</label>
+            <input type="text" name="email" class="form-control" id="username" value="" autocomplete="username" required>
+            <div class="invalid-feedback">
+                Please input your email
+            </div>
+        </div>
+
+        <div class="col-md-6">
+            <label for="password" class="form-label">Password</label>
+            <input type="password" name="password" class="form-control" id="new-password" autocomplete="new-password" required>
+        </div>
+
+        <div class="col-12">
+            <button class="btn btn-primary" type="submit">Sign Up</button>
+        </div>
+    </form>
+    <p class="mt-2">Have an account? <a href="/login">Sing In</a>.</p>
+
+    #endexport
+#endextend

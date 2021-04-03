@@ -83,6 +83,9 @@ func websiteRoutes(_ builder: RoutesBuilder, _ controllers: Controllers) {
     builder.on(.GET, "login", use: controllers.websiteController.loginHandler)
     builder.grouped(User.credentialsAuthenticator())
            .on(.POST, "login", use: controllers.websiteController.loginDoneHandler)
+    builder.on(.GET, "signup", use: controllers.websiteController.signupHandler)
+    builder.on(.POST, "signup", use: controllers.websiteController.signupDoneHandler)
+    builder.on(.POST, "logout", use: controllers.websiteController.logoutHandler)
 
     builder.on(.GET, "projects", ":project", ":branch", use: controllers.websiteController.branchHandler)
 }
