@@ -20,15 +20,14 @@
         <div class="col-md-6">
             <label for="username" class="form-label">Email</label>
             <input type="text" name="email" class="form-control" id="username" value="" autocomplete="username" required>
-            <div class="invalid-feedback">
-                Please input your email
-            </div>
-        </div>
+            <div id="emailHelp" class="form-text">We'll never share your email with anyone else.</div>
+          </div>
 
         <div class="col-md-6">
             <label for="password" class="form-label">Password</label>
             <input type="password" name="password" class="form-control" id="new-password" autocomplete="new-password" required>
-        </div>
+            <div id="passHelp" class="form-text">Your password must be at least 8 characters long, contain letters and numbers or special characters, and must not contain spaces or emoji.</div>
+          </div>
 
         <div class="col-12">
             <button class="btn btn-primary" type="submit">Sign Up</button>

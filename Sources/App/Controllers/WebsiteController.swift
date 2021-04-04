@@ -73,8 +73,8 @@ struct WebsiteController {
 
         guard params.email.isValidEmail,
               params.password.isValidPassword,
-              params.firstName.count > 2,
-              params.lastName.count > 2,
+              params.firstName.count >= 2,
+              params.lastName.count >= 2,
               let digest = try? Bcrypt.hash(params.password) else {
             throw Abort.redirect(to: "/signup?invalid=1")
         }
