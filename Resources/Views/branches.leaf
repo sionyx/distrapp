@@ -1,60 +1,60 @@
 #extend("base"):
     #export("body"):
 
-    <div class="list-group shadow-sm mb-2">
-        <div class="list-group-item container">
+    <div class="card shadow-sm mb-2" >
+        <div class="card-header">
             <div class="row">
-                #if(project.icon):
                 <div class="col-md-auto">
-                    <img src="#(project.icon)" class="img-thumbnail" style="width:64px;height:64px;object-fit:cover;">
+                    <img src="#if(project.icon):#(project.icon)#else:/images/emptyapp.png#endif" class="img-thumbnail" style="width:64px;height:64px;object-fit:cover;">
                 </div>
-                #endif
                 <div class="col">
-                    <p class="mb-0 mt-0"><strong>#(project.title)</strong></p>
-                    <p class="mb-0 mt-0">Platform: iOS</p>
-                </div>
-                <div class="col-md-auto">
-                    <a href="/projects/#(project.name)/upload" class="btn btn-primary">Upload</a>
+                    <h5 class="card-title">#(project.title)</strong></h5>
+                    <h6 class="card-subtitle mb-2 text-muted">Platform: iOS</h6>
                 </div>
                 <!--div class="col-md-auto">
                     <a href="/projects/#(project.name)/members" class="btn btn-primary">Members</a>
                 </div-->
             </div>
         </div>
-
-
         #if(project.description):
-        <div class="list-group-item">
-            <p class="m-0"><strong>Description</strong></p>
-            <p class="m-0">#(project.description)</p>
+        <div class="card-body">
+            <h5 class="card-title">Description</strong></h5>
+            <p class="card-text">#(project.description)</p>
         </div>
         #endif
     </div>
 
-    <div class="list-group shadow-sm">
-        <p class="list-group-item list-group-item-secondary m-0">
-            Branches
-        </p>
-
-        #for(branch in branches):
-        <a class="list-group-item list-group-item-action" href="/projects/#(project.name)/#(branch.tag)">
+    <div class="card shadow-sm mb-2" >
+        <div class="card-header">
             <div class="row">
-                <div class="col d-flex align-items-center">
-                    <p class="m-0">
-                        #(branch.tag)
-                    </p>
-                </div>
-                <div class="col-lg-1 d-flex align-items-center">
-                    <p class="col-md-auto m-0"><small>Build #(branch.build_number)</small></p>
-                </div>
-                <div class="col-lg-2 d-flex align-items-center">
-                    <p class="col-md-auto m-0"><small>#date(branch.updated, "yyyy-MM-dd hh:mm")</small></p>
-                </div>
+                <h5 class="m-0 col d-flex align-items-center">
+                    Branches
+                </h5>
+                <a href="/projects/#(project.name)/upload" class="btn btn-primary col-auto">
+                    New Branch
+                </a>
             </div>
-        </a>
-        #endfor
+        </div>
+        <div class="list-group list-group-flush">
+            #for(branch in branches):
+            <a class="list-group-item list-group-item-action" href="/projects/#(project.name)/#(branch.tag)">
+                <div class="row">
+                    <div class="col d-flex align-items-center">
+                        <p class="m-0">
+                            #(branch.tag)
+                        </p>
+                    </div>
+                    <div class="col-lg-1 d-flex align-items-center">
+                        <p class="col-md-auto m-0"><small>Build #(branch.build_number)</small></p>
+                    </div>
+                    <div class="col-lg-2 d-flex align-items-center">
+                        <p class="col-md-auto m-0"><small>#date(branch.updated, "yyyy-MM-dd hh:mm")</small></p>
+                    </div>
+                </div>
+            </a>
+            #endfor
+        </div>
     </div>
-
     #endexport
 #endextend
 

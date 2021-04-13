@@ -1,25 +1,22 @@
 #extend("base"):
     #export("body"):
-    <div class="list-group shadow-sm mb-2">
-        <p class="list-group-item list-group-item-secondary m-0">
-            #(title)
-        </p>
-
-        <div class="list-group-item container">
-            <div class="row">
-                #if(user.user_pic):
-                <div class="col-md-auto">
-                    <img src="#(user.user_pic)" class="img-thumbnail" style="width:64px;height:64px;object-fit:cover;">
-                </div>
-                #endif
-                <div class="col">
-                    <p class="mb-0 mt-0">#(user.first_name)</p>
-                    <p class="mb-0 mt-0">#(user.last_name)</p>
-                </div>
-                <form class="col-md-auto" action="/logout" method="post">
-                    <button type="submit" class="btn btn-primary">Sign Out</button>
-                </form>
+    <div class="card shadow-sm mb-2" >
+        <div class="card-header">
+            <h5 class="m-0 col d-flex align-items-center">#(title)</p>
+        </div>
+        <div class="card-body row">
+            #if(user.user_pic):
+            <div class="col-md-auto">
+                <img src="#(user.user_pic)" class="img-thumbnail" style="width:64px;height:64px;object-fit:cover;">
             </div>
+            #endif
+            <div class="col">
+                <p class="mb-0 mt-0">#(user.first_name)</p>
+                <p class="mb-0 mt-0">#(user.last_name)</p>
+            </div>
+            <form class="col-md-auto" action="/logout" method="post">
+                <button type="submit" class="btn btn-primary">Sign Out</button>
+            </form>
         </div>
     </div>
 

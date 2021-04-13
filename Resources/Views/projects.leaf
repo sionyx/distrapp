@@ -1,29 +1,32 @@
 #extend("base"):
     #export("body"):
-        <div class="list-group shadow-sm">
-            <p class="list-group-item list-group-item-secondary m-0">
-                Projects
-            </p>
+    <div class="card shadow-sm mb-2" >
+        <div class="card-header">
+            <div class="row">
+                <h5 class="m-0 col d-flex align-items-center">
+                    Projects
+                </h5>
+                <a href="#" class="btn btn-primary col-auto">
+                    New Project
+                </a>
+            </div>
+        </div>
+        <div class="list-group list-group-flush">
             #for(project in projects):
             <a class="list-group-item list-group-item-action" href="/projects/#(project.name)">
                 <div class="row">
-                    #if(project.icon):
-                    <div class="col-md-auto">
-                        <img src="#(project.icon)" class="rounded" style="width:32px;height:32mipx;object-fit:cover;">
+                    <div class="col-auto">
+                        <img src="#if(project.icon):#(project.icon)#else:/images/emptyapp.png#endif" class="rounded border" style="width:32px;height:32mipx;object-fit:cover;">
                     </div>
-                    #endif
-                    <div class="col d-flex align-items-center">
-                        <p class="m-0">
-                            #(project.title)
-                        </p>
-                    </div>
-                    <div class="col-md-auto d-flex align-items-center">
-                        <p class="col-md-auto m-0"><small>Role: #(project.grant)</small></p>
-                    </div>
+                    <p class="col d-flex align-items-center m-0">
+                        #(project.title)
+                    </p>
+                    <p class="col-md-auto d-flex align-items-center m-0"><small>Role: #(project.grant)</small></p>
                 </div>
             </a>
             #endfor
         </div>
+    </div>
     #endexport
 #endextend
 

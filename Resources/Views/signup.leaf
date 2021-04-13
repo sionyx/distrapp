@@ -1,39 +1,45 @@
 #extend("base"):
     #export("body"):
-    <form class="row g-3" action="/signup" method="post">
-        <div class="col-md-6">
-            <label for="firstName" class="form-label">First name</label>
-            <input type="text" name="firstName" class="form-control" id="firstName" value="" autofocus required>
-            <div class="valid-feedback">
-                Looks good!
-            </div>
+    <div class="card shadow-sm mb-2" >
+        <div class="card-header">
+            <h5 class="m-0 col d-flex align-items-center">#(title)</p>
         </div>
+        <div class="card-body">
+            <form class="row g-3" action="/signup" method="post">
+                <div class="col-md-6">
+                    <label for="firstName" class="form-label">First name</label>
+                    <input type="text" name="firstName" class="form-control" id="firstName" value="" autofocus required>
+                    <div class="valid-feedback">
+                        Looks good!
+                    </div>
+                </div>
 
-        <div class="col-md-6">
-            <label for="lastName" class="form-label">Last name</label>
-            <input type="text" name="lastName" class="form-control" id="lastName" value="" required>
-            <div class="valid-feedback">
-                Looks good!
-            </div>
+                <div class="col-md-6">
+                    <label for="lastName" class="form-label">Last name</label>
+                    <input type="text" name="lastName" class="form-control" id="lastName" value="" required>
+                    <div class="valid-feedback">
+                        Looks good!
+                    </div>
+                </div>
+
+                <div class="col-md-6">
+                    <label for="username" class="form-label">Email</label>
+                    <input type="text" name="email" class="form-control" id="username" value="" autocomplete="username" required>
+                    <div id="emailHelp" class="form-text">We'll never share your email with anyone else.</div>
+                </div>
+
+                <div class="col-md-6">
+                    <label for="password" class="form-label">Password</label>
+                    <input type="password" name="password" class="form-control" id="new-password" autocomplete="new-password" required>
+                    <div id="passHelp" class="form-text">Your password must be at least 8 characters long, contain letters and numbers or special characters, and must not contain spaces or emoji.</div>
+                </div>
+
+                <div class="col-12">
+                    <button class="btn btn-primary" type="submit">Sign Up</button>
+                    <p class="mt-2 text-muted">Have an account? <a href="/login">Login</a>.</p>
+                </div>
+            </form>
         </div>
-
-        <div class="col-md-6">
-            <label for="username" class="form-label">Email</label>
-            <input type="text" name="email" class="form-control" id="username" value="" autocomplete="username" required>
-            <div id="emailHelp" class="form-text">We'll never share your email with anyone else.</div>
-          </div>
-
-        <div class="col-md-6">
-            <label for="password" class="form-label">Password</label>
-            <input type="password" name="password" class="form-control" id="new-password" autocomplete="new-password" required>
-            <div id="passHelp" class="form-text">Your password must be at least 8 characters long, contain letters and numbers or special characters, and must not contain spaces or emoji.</div>
-          </div>
-
-        <div class="col-12">
-            <button class="btn btn-primary" type="submit">Sign Up</button>
-        </div>
-    </form>
-    <p class="mt-2">Have an account? <a href="/login">Sing In</a>.</p>
-
+    </div>
     #endexport
 #endextend

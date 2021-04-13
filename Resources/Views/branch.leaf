@@ -3,16 +3,12 @@
         <div class="card shadow-sm" >
             <div class="card-header">
                 <div class="row">
-                    #if(project.icon):
                     <div class="col-md-auto">
-                        <img src="#(project.icon)" class="img-thumbnail" style="width:64px;height:64px;object-fit:cover;">
+                        <img src="#if(project.icon):#(project.icon)#else:/images/emptyapp.png#endif" class="img-thumbnail" style="width:64px;height:64px;object-fit:cover;">
                     </div>
-                    #endif
                     <div class="col align-items-center">
-                        <p class="m-0">#(project.title)</p>
-                        <h5 class="m-0">
-                            #(branch.tag)
-                        </h5>
+                        <h5 class="card-title">#(branch.tag)</h5>
+                        <h6 class="card-subtitle mb-2 text-muted">#(project.title)</h6>
                     </div>
                 </div>
             </div>
