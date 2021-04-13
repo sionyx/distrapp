@@ -13,6 +13,9 @@
                     <p class="mb-0 mt-0"><strong>#(project.title)</strong></p>
                     <p class="mb-0 mt-0">Platform: iOS</p>
                 </div>
+                <div class="col-md-auto">
+                    <a href="/projects/#(project.name)/upload" class="btn btn-primary">Upload</a>
+                </div>
                 <!--div class="col-md-auto">
                     <a href="/projects/#(project.name)/members" class="btn btn-primary">Members</a>
                 </div-->

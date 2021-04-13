@@ -1,0 +1,39 @@
+#extend("base"):
+    #export("body"):
+
+        <div class="list-group shadow-sm">
+            <p class="list-group-item list-group-item-secondary m-0">
+                Upload Branch
+            </p>
+
+            <div class="list-group-item">
+                <form class="row" action="/projects/#(project.name)/upload" method="post" enctype="multipart/form-data">
+                    <div class="my-3 row">
+                        <label for="inputBranch" class="col-sm-2 col-form-label">Branch Name</label>
+                        <div class="col-sm-10">
+                            <input type="text" class="form-control" name="branch" id="inputBranch" value="#(project.name)-" autofocus>
+                        </div>
+                    </div>
+                    <div class="my-3 row">
+                        <label for="inputDescription" class="col-sm-2 col-form-label">Branch Description</label>
+                        <div class="col-sm-10">
+                            <input type="text" class="form-control" name="description" id="inputDescription">
+                        </div>
+                    </div>
+                    <div class="mb-3 row">
+                        <label for="formFile" class="col-sm-2 col-form-label">.ipa File</label>
+                        <div class="col-sm-10">
+                            <input class="form-control" name="file" type="file" id="formFile">
+                        </div>
+                    </div>
+
+                    <div class="row justify-content-end">
+                        <button type="submit" class="btn btn-primary col-sm-2 mb-3 me-2">Upload</button>
+                    </div>
+                </form>
+            </div>
+        </div>
+
+    #endexport
+#endextend
+

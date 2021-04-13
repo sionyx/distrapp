@@ -220,7 +220,10 @@ struct WebsiteController {
                     installUrl = "itms-services://?action=download-manifest&url=https://\(host)/install/\(project.name)/\(branch.tag)/manifest.plist"
                 }
 
-                return req.view.render("branch", BranchContent(user: currentUser?.short,
+                return req.view.render("branch", BranchContent(og: OpenGraph(title: branch.tag,
+                                                                             description: branch.description,
+                                                                             image: project.icon),
+                                                               user: currentUser?.short,
                                                                project: project.short,
                                                                branch: branch.short,
                                                                canProtect: grant?.canProtect,
@@ -230,7 +233,83 @@ struct WebsiteController {
             }
     }
 
+    func uploadHandler(_ req: Request) throws -> EventLoopFuture<View> {
+        guard let currentUser = try? req.auth.require(User.self),
+              let currentUserId = currentUser.id,
+              let project = req.parameters.get("project") else {
+            throw Abort(.unauthorized)
+        }
 
+        return Project
+            .by(name: project, on: req.db)
+            .granted(to: currentUserId, on: req.db)
+            .guard({ $1.canUpload }, else: Abort.redirect(to: "/projects/\(project)"))
+            .flatMap { project, grant in
+                req.view.render("upload", BracnchUploadContent(user: currentUser.short,
+                                                               project: project.short))
+            }
+    }
+
+    func uploadDoneHandler(_ req: Request) throws -> EventLoopFuture<Response> {
+        guard let currentUser = try? req.auth.require(User.self),
+              let currentUserId = currentUser.id else {
+            throw Abort(.unauthorized)
+        }
+
+        guard let project = req.parameters.get("project"),
+              let params = try? req.content.decode(UploadPostParams.self) else {
+            throw Abort(.badRequest)
+        }
+
+        return Project
+            .by(name: project, on: req.db)
+            .granted(to: currentUserId, on: req.db)
+            .canUpload()
+            .branchOrNot(by: params.branch, on: req.db)
+            .flatMap { project, branch -> EventLoopFuture<(Project, String, Branch?)> in
+                let dirPath = URL(fileURLWithPath: "./builds/\(project.name)/\(params.branch)")
+                print("dir path: \(dirPath.absoluteString)")
+                try? FileManager.default.createDirectory(atPath: dirPath.path, withIntermediateDirectories: true, attributes: nil)
+
+                if let branch = branch {
+                    let oldFilePath = URL(fileURLWithPath: "./builds/\(project.name)/\(params.branch)/\(branch.filename)").path
+                    if FileManager.default.isDeletableFile(atPath: oldFilePath) {
+                        try? FileManager.default.removeItem(atPath: oldFilePath)
+                    }
+                }
+
+                let filePath = URL(fileURLWithPath: "./builds/\(project.name)/\(params.branch)/\(params.file.filename)").path
+                return req.application.fileio.openFile(path: filePath,
+                                                       mode: .write,
+                                                       flags: .allowFileCreation(posixMode: 0x744),
+                                                       eventLoop: req.eventLoop)
+                    .flatMap { handle in
+                        req.application.fileio.write(fileHandle: handle,
+                                                     buffer: params.file.data,
+                                                     eventLoop: req.eventLoop)
+                            .flatMapThrowing { _ -> (Project, String, Branch?) in
+                                try handle.close()
+                                return (project, filePath, branch)
+                            }
+                    }
+            }
+            .flatMap { project, filePath, brunch -> EventLoopFuture<Void> in
+                let attr = try? FileManager.default.attributesOfItem(atPath: filePath)
+                let fileSize = Int(attr?[FileAttributeKey.size] as? UInt64 ?? 0)
+
+                guard let brunchToSave = brunch ?? (try? Branch(project: project, tag: params.branch, filename: params.file.filename, size: 0, isTested: false, isProtected: false, description: params.description, buildNumber: 0)) else {
+                    return req.eventLoop.makeFailedFuture(Abort(.internalServerError, reason: "Cannot create branch"))
+                }
+                brunchToSave.filename = params.file.filename
+                brunchToSave.description = params.description.nonEmptyValue
+                brunchToSave.size = fileSize
+                brunchToSave.isTested = false
+                brunchToSave.buildNumber += 1
+
+                return brunchToSave.save(on: req.db)
+            }
+            .transform(to: req.redirect(to: "/projects/\(project)/\(params.branch)"))
+    }
 }
 
 struct LoginParams: Content {
@@ -254,9 +333,28 @@ struct SignupParams: Content {
     let password: String
 }
 
+struct UploadPostParams: Content {
+    let branch: String
+    let description: String
+    let file: File
+}
+
+struct OpenGraph: Content {
+    let title: String
+    let description: String?
+    let image: String?
+}
+
 protocol WebSiteContent: Content {
     var title: String { get }
+    var og: OpenGraph? { get }
     var user: User.Short? { get }
+}
+
+extension WebSiteContent {
+    var og: OpenGraph? {
+        return nil
+    }
 }
 
 struct IndexContent: WebSiteContent {
@@ -293,6 +391,7 @@ struct BranchesContent: WebSiteContent {
 
 struct BranchContent: WebSiteContent {
     var title = "Branch"
+    let og: OpenGraph?
     let user: User.Short?
     let project: Project.Short
     let branch: Branch.Short
@@ -300,6 +399,12 @@ struct BranchContent: WebSiteContent {
     let canTest: Bool?
     let canUpload: Bool?
     let installUrl: String?
+}
+
+struct BracnchUploadContent: WebSiteContent {
+    var title = "Upload"
+    let user: User.Short?
+    let project: Project.Short
 }
 
 struct ProfileContent: WebSiteContent {

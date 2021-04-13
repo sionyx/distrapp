@@ -15,16 +15,17 @@ extension String {
         return self
     }
 
-    private static var emailPredicate: NSPredicate = {
+    private static var emailRegex: NSRegularExpression = {
         // https://stackoverflow.com/a/41782027/3905537
         let firstpart = "[A-Z0-9a-z]([A-Z0-9a-z._%+-]{0,30}[A-Z0-9a-z])?"
         let serverpart = "([A-Z0-9a-z]([A-Z0-9a-z-]{0,30}[A-Z0-9a-z])?\\.){1,5}"
-        let emailRegex = firstpart + "@" + serverpart + "[A-Za-z]{2,8}"
-        return  NSPredicate(format: "SELF MATCHES %@", emailRegex)
+        let emailRegex = "^\(firstpart)@\(serverpart)[A-Za-z]{2,8}$"
+        return try! NSRegularExpression(pattern: emailRegex, options: .caseInsensitive)
     }()
 
     var isValidEmail: Bool {
-        return String.emailPredicate.evaluate(with: self)
+        let res = Self.emailRegex.firstMatch(in: self, options: [], range: NSRange(location: 0, length: count))
+        return res != nil
     }
 
     static let validchars = "ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz1234567890-=!@#$%^&*()_+<>/\\;:'\"[]{}~`"
