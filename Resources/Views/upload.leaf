@@ -8,10 +8,10 @@
 
             <div class="list-group-item">
                 <form class="row" action="/projects/#(project.name)/upload" method="post" enctype="multipart/form-data">
-                    <div class="my-3 row">
+                    <div class="mt-3 row">
                         <label for="inputBranch" class="col-sm-2 col-form-label">Branch Name</label>
                         <div class="col-sm-10">
-                            <input type="text" class="form-control" name="branch" id="inputBranch" value="#(project.name)-" autofocus>
+                            <input type="text" name="branch" id="inputBranch" #if(branch):class="form-control-plaintext" value="#(branch)" readonly#else:class="form-control" value="#(project.name)-" autofocus#endif>
                         </div>
                     </div>
                     <div class="my-3 row">

@@ -59,6 +59,16 @@
                         </div>
                         #endif
                     #endif
+                    #if(canUpload):
+                        <div class="col d-grid">
+                            <a href="/projects/#(project.name)/#(branch.tag)/upload" class="btn btn-primary my-1">Upload</a>
+                        </div>
+                        #if(!branch.is_protected):
+                        <!-- div class="col d-grid">
+                            <a href="/projects/#(project.name)/#(branch.tag)/delete" class="btn btn-danger my-1">Delete</a>
+                        </div -->
+                        #endif
+                    #endif
                 </li>
                 #endif
             </ul>

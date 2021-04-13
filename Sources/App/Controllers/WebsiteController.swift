@@ -240,13 +240,16 @@ struct WebsiteController {
             throw Abort(.unauthorized)
         }
 
+        let branch = req.parameters.get("branch")
+
         return Project
             .by(name: project, on: req.db)
             .granted(to: currentUserId, on: req.db)
             .guard({ $1.canUpload }, else: Abort.redirect(to: "/projects/\(project)"))
             .flatMap { project, grant in
                 req.view.render("upload", BracnchUploadContent(user: currentUser.short,
-                                                               project: project.short))
+                                                               project: project.short,
+                                                               branch: branch))
             }
     }
 
@@ -405,6 +408,7 @@ struct BracnchUploadContent: WebSiteContent {
     var title = "Upload"
     let user: User.Short?
     let project: Project.Short
+    let branch: String?
 }
 
 struct ProfileContent: WebSiteContent {

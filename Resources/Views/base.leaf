@@ -10,10 +10,12 @@
     #if(og.description):<meta property="og:description" content="#(og.description)" />#endif
     #if(og.image):<meta property="og:image" content="#(og.image)" />#endif
     #endif
+    <link rel="icon" href="/images/distrapp32.png" sizes="32x32" type="image/png">
+    <link rel="icon" href="/images/distrapp16.png" sizes="16x16" type="image/png">
   </head>
   <body>
-      <nav class="navbar navbar-expand-sm navbar-dark bg-dark" aria-label="breadcrumb">
-          <div class="container-fluid">
+      <nav class="navbar navbar-expand-md navbar-dark bg-dark" aria-label="breadcrumb">
+          <div class="container">
               <a class="navbar-brand" href="/">
                   <img src="/images/distrapp64.png" alt="" width="32" height="32" class="d-inline-block rounded">
                   distr.app

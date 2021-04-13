@@ -98,6 +98,7 @@ func sessionRoutes(_ builder: RoutesBuilder, _ controllers: Controllers) {
     builder.on(.GET, "projects", use: controllers.websiteController.projectsHandler)
     builder.on(.GET, "projects", ":project", use: controllers.websiteController.branchesHandler)
     builder.on(.GET, "projects", ":project", "upload", use: controllers.websiteController.uploadHandler)
+    builder.on(.GET, "projects", ":project", ":branch", "upload", use: controllers.websiteController.uploadHandler)
     builder.on(.POST, "projects", ":project", "upload", use: controllers.websiteController.uploadDoneHandler)
 }
 

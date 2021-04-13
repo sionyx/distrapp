@@ -44,10 +44,10 @@
                         #(branch.tag)
                     </p>
                 </div>
-                <div class="col-md-auto d-flex align-items-center">
+                <div class="col-lg-1 d-flex align-items-center">
                     <p class="col-md-auto m-0"><small>Build #(branch.build_number)</small></p>
                 </div>
-                <div class="col-md-auto d-flex align-items-center">
+                <div class="col-lg-2 d-flex align-items-center">
                     <p class="col-md-auto m-0"><small>#date(branch.updated, "yyyy-MM-dd hh:mm")</small></p>
                 </div>
             </div>
