@@ -120,7 +120,6 @@ extension User: ModelCredentialsAuthenticatable {
             return true
         }
         
-        _ = try Bcrypt.verify(password, created: self.password)
-        return true
+        return try Bcrypt.verify(password, created: self.password)
     }
 }
