@@ -9,16 +9,6 @@ import Fluent
 import Vapor
 
 struct GrantsController {
-    struct GrantWithUser: Content {
-        let user: User.Short
-        let type: GrantType
-
-        fileprivate init(_ grant: Grant) {
-            self.user = grant.user.short
-            self.type = grant.type
-        }
-    }
-
 
     // http://localhost:8080/grants
     func _index(req: Request) throws -> EventLoopFuture<[Grant.Short]> {
@@ -30,7 +20,7 @@ struct GrantsController {
     }
 
     // http://localhost:8080/api/v1/grants?project=MINICLOUD
-    func list(_ req: Request) throws -> EventLoopFuture<[GrantWithUser]> {
+    func list(_ req: Request) throws -> EventLoopFuture<[Member]> {
         guard let currentUser = try? req.auth.require(User.self),
               let currentUserId = currentUser.id else {
             throw Abort(.unauthorized)
@@ -45,13 +35,13 @@ struct GrantsController {
             .canInvite()
 
         let users = ownedProject
-            .flatMap { project -> EventLoopFuture<[GrantWithUser]> in
+            .flatMap { project, _ -> EventLoopFuture<[Member]> in
                 let r = Grant.query(on: req.db)
                     .filter(\.$project.$id == project.id!)
                     .with(\.$user)
                     .with(\.$project)
                     .all()
-                    .map { $0.map { GrantWithUser($0) }}
+                    .map { $0.map { Member($0) }}
 
                 return r
             }
@@ -75,6 +65,7 @@ struct GrantsController {
             .by(name: shortGrant.project, on: req.db)
             .granted(to: currentUserId, on: req.db)
             .canInvite()
+            .map { $0.0 }
 
         let userToGrant = User
             .by(name: shortGrant.user, on: req.db)
@@ -107,6 +98,7 @@ struct GrantsController {
             .by(name: shortGrant.project, on: req.db)
             .granted(to: currentUserId, on: req.db)
             .canInvite()
+            .map { $0.0 }
 
         let grantedUser = User
             .by(name: shortGrant.user, on: req.db)

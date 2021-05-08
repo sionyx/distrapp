@@ -1,0 +1,24 @@
+#extend("base"):
+    #export("body"):
+
+    <div class="container-sm">
+        <div class="row justify-content-center">
+            <div class="col" style="max-width: 24rem;">
+                <div class="col card border-danger mb-3 shadow-sm">
+                    <div class="card-header">#(title)</div>
+                    <div class="card-body">
+                        <p class="card-text">Are you sure to delete project #(projectName)?</p>
+                    </div>
+                    <div class="card-footer bg-transparent border-danger">
+                        <form action="/projects/#(projectName)/delete" method="post">
+                            <a type="button" class="btn btn-secondary" href="/projects/#(projectName)">Back</a>
+                            <button class="btn btn-danger" type="submit">Delete Project</button>
+                        </form>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    #endexport
+#endextend

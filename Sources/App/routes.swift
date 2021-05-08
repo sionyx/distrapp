@@ -17,6 +17,7 @@ enum Controllers {
         static let profileController = ProfileWebController()
         static let projectsController = ProjectsWebController()
         static let branchesController = BranchesWebController()
+        static let grantsController = GrantsWebController()
     }
 }
 
@@ -101,6 +102,18 @@ func sessionRoutes(_ builder: RoutesBuilder) {
 
     builder.on(.GET, "projects", use: Controllers.Web.projectsController.projectsHandler)
     builder.on(.GET, "projects", ":project", use: Controllers.Web.branchesController.branchesHandler)
+
+    builder.on(.GET, "projects", "new", use: Controllers.Web.projectsController.newProject)
+    builder.on(.POST, "projects", "new", use: Controllers.Web.projectsController.newProjectDone)
+    builder.on(.GET, "projects", ":project", "edit", use: Controllers.Web.projectsController.editProject)
+    builder.on(.POST, "projects", ":project", "save", use: Controllers.Web.projectsController.editProjectDone)
+    builder.on(.POST, "projects", ":project", "icon", use: Controllers.Web.projectsController.iconProjectDone)
+    builder.on(.GET, "projects", ":project", "delete", use: Controllers.Web.projectsController.deleteProject)
+    builder.on(.POST, "projects", ":project", "delete", use: Controllers.Web.projectsController.deleteProjectDone)
+    builder.on(.GET, "projects", ":project", "members", use: Controllers.Web.grantsController.membersHandler)
+    builder.on(.POST, "projects", ":project", "invite", use: Controllers.Web.grantsController.inviteDone)
+    builder.on(.POST, "projects", ":project", "remove", use: Controllers.Web.grantsController.removeDone)
+
     builder.on(.GET, "projects", ":project", "upload", use: Controllers.Web.branchesController.uploadHandler)
     builder.on(.GET, "projects", ":project", ":branch", "upload", use: Controllers.Web.branchesController.uploadHandler)
     builder.on(.POST, "projects", ":project", "upload", use: Controllers.Web.branchesController.uploadDoneHandler)

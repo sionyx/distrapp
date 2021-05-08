@@ -158,6 +158,15 @@ extension EventLoopFuture where Value == (Project, GrantType) {
                     .map { (project, grant, $0) }
             }
     }
+    func branchOrNot(by tag: String, on db: Database) -> EventLoopFuture<(Project, GrantType, Branch?)> {
+        self
+            .flatMap { project, grant -> EventLoopFuture<(Project, GrantType, Branch?)> in
+                return project.$branches.query(on: db)
+                    .filter(\.$tag == tag)
+                    .first()
+                    .map { (project, grant, $0) }
+            }
+    }
 }
 
 extension EventLoopFuture where Value == (Project, GrantType?) {

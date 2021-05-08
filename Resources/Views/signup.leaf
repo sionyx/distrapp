@@ -24,7 +24,7 @@
 
                 <div class="col-md-6">
                     <label for="username" class="form-label">Email</label>
-                    <input type="text" name="email" class="form-control #if(invalidEmail):is-invalid#endif" id="username" value="#(email)" autocomplete="username" required>
+                    <input type="email" name="email" class="form-control #if(invalidEmail):is-invalid#endif" id="username" value="#(email)" autocomplete="username" required>
                     <div class="invalid-feedback">
                         Please provide a valid email.
                     </div>

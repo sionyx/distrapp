@@ -1,0 +1,63 @@
+#extend("base"):
+    #export("body"):
+
+    <div class="card shadow-sm mb-2" >
+        <div class="card-header">
+            <h5 class="m-0 col d-flex align-items-center">#(title)</p>
+        </div>
+        <div class="card-body">
+            <form class="row g-3" action="/projects/#(project.name)/save" method="post">
+                <div class="col-md-6">
+                    <label for="inputBranch" class="form-label">Project Name</label>
+                    <input type="text" class="form-control-plaintext" name="name" id="inputName"  value="#(projectName)" readonly>
+                </div>
+                <div class="col-md-6">
+                    <label for="inputTitle" class="form-label">Project Title</label>
+                    <input type="text" class="form-control #if(invalidTitle):is-invalid#endif" name="title" id="inputTitle" value="#(projectTitle)" placeholder="My Fancy App" autofocus required>
+                    #if(invalidTitle):
+                    <div class="invalid-feedback">
+                        Please provide project title.
+                    </div>
+                    #endif
+                </div>
+                <div class="col-md-6">
+                    <label for="inputBundleId" class="form-label">App bundleId</label>
+                    <input type="text" class="form-control #if(invalidBundle):is-invalid#endif" name="bundle_id" id="inputBundleId" value="#(projectBundle)" placeholder="com.example.myApp" required>
+                    #if(invalidBundle):
+                    <div class="invalid-feedback">
+                        Please provide valid application bundle id.
+                    </div>
+                    #endif
+                </div>
+                <div class="col-md-6">
+                    <label for="inputDescription" class="form-label">Project Description</label>
+                    <input type="text" class="form-control" name="description" id="inputDescription" value="#(projectDescription)" placeholder="Optional Description">
+                </div>
+
+                <div class="col-12">
+                    <button class="btn btn-primary" type="submit">Save</button>
+                </div>
+            </form>
+        </div>
+    </div>
+
+    <div class="card shadow-sm mb-2" >
+        <div class="card-header">
+            <h5 class="m-0 col d-flex align-items-center">Upload Icon</p>
+        </div>
+        <div class="card-body">
+            <form class="row g-3" action="/projects/#(project.name)/icon" method="post" enctype="multipart/form-data">
+                <div class="col-12">
+                    <input type="file" class="form-control" name="file" id="formFile" accept="image/x-png,image/jpeg">
+                    <div id="fileHelp" class="form-text">Provide .png or .jpeg file with size 64x64</div>
+                </div>
+                <div class="col-12">
+                    <button type="submit" class="btn btn-primary">Upload</button>
+                </div>
+            </form>
+        </div>
+    </div>
+
+    #endexport
+#endextend
+

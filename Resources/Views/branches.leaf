@@ -1,38 +1,76 @@
 #extend("base"):
     #export("body"):
 
-    <div class="card shadow-sm mb-2" >
-        <div class="card-header">
-            <div class="row">
-                <div class="col-md-auto">
-                    <img src="#if(project.icon):#(project.icon)#else:/images/emptyapp.png#endif" class="img-thumbnail" style="width:64px;height:64px;object-fit:cover;">
+    <div class="container px-0 mb-2">
+        <div class="row gx-2">
+
+            <div class="col pt-2">
+                <div class="card shadow-sm h-100" >
+                    <div class="card-header">
+                        <div class="row">
+                            <div class="col-md-auto">
+                                <img src="#if(project.icon):#(project.icon)#else:/images/emptyapp.png#endif" class="img-thumbnail" style="width:64px;height:64px;object-fit:cover;">
+                            </div>
+                            <div class="col">
+                                <h5 class="card-title">#(project.title)</strong></h5>
+                                <h6 class="card-subtitle mb-2 text-muted">Platform: iOS</h6>
+                            </div>
+                            <!--div class="col-md-auto">
+                                <a href="/projects/#(project.name)/members" class="btn btn-primary">Members</a>
+                            </div-->
+                        </div>
+                    </div>
+                    <div class="card-body">
+                        <p class="card-text">bundle: #(project.bundle_id)</p>
+                        #if(project.description):
+                        <p class="card-text">#(project.description)</p>
+                        #endif
+                    </div>
                 </div>
-                <div class="col">
-                    <h5 class="card-title">#(project.title)</strong></h5>
-                    <h6 class="card-subtitle mb-2 text-muted">Platform: iOS</h6>
-                </div>
-                <!--div class="col-md-auto">
-                    <a href="/projects/#(project.name)/members" class="btn btn-primary">Members</a>
-                </div-->
             </div>
+
+            #if(canInvite || canEdit || canDelete):
+            <div class="col-md-auto pt-2">
+                <div class="card shadow-sm h-100" >
+                    <div class="card-body">
+                        <div class="d-grid gap-2">
+
+                        #if(canInvite):
+                        <a href="/projects/#(project.name)/members" class="btn btn-outline-primary">Members</a>
+                        #endif
+                        #if(canEdit):
+                        <a href="/projects/#(project.name)/edit" class="btn btn-outline-primary">Edit</a>
+                        #endif
+                        #if(canDelete):
+                            #if(count(branches) > 0):
+                            <span class="d-inline-block" tabindex="0" data-bs-toggle="tooltip" data-bs-placement="bottom" title="Project with branches could not be deleted">
+                                <a href="/projects/#(project.name)/delete" class="btn btn-outline-danger disabled w-100">Delete</a>
+                            </span>
+                            #else:
+                            <a href="/projects/#(project.name)/delete" class="btn btn-outline-danger" data-bs-toggle="modal" data-bs-target="\#deleteModal">Delete</a>
+                            #endif
+                        #endif
+                        </div>
+                    </div>
+                </div>
+            </div>
+            #endif
+
         </div>
-        #if(project.description):
-        <div class="card-body">
-            <h5 class="card-title">Description</strong></h5>
-            <p class="card-text">#(project.description)</p>
-        </div>
-        #endif
     </div>
 
+    <!-- Branches -->
     <div class="card shadow-sm mb-2" >
         <div class="card-header">
             <div class="row">
                 <h5 class="m-0 col d-flex align-items-center">
                     Branches
                 </h5>
+                #if(canUpload):
                 <a href="/projects/#(project.name)/upload" class="btn btn-primary col-auto">
                     New Branch
                 </a>
+                #endif
             </div>
         </div>
         <div class="list-group list-group-flush">
@@ -55,6 +93,27 @@
             #endfor
         </div>
     </div>
+
+    <!-- Modal -->
+    <div class="modal fade" id="deleteModal" tabindex="-1" aria-labelledby="deleteModalLabel" aria-hidden="true">
+        <div class="modal-dialog">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <h5 class="modal-title" id="deleteModalLabel">Delete Project</h5>
+                    <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+                </div>
+            <div class="modal-body">
+                <p class="card-text">Are you sure to delete project #(project.name)?</p>
+            </div>
+            <div class="modal-footer">
+                <form action="/projects/#(project.name)/delete" method="post">
+                    <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Close</button>
+                    <button type="submit" class="btn btn-danger">Delete Project</button>
+                </form>
+            </div>
+        </div>
+    </div>
+
     #endexport
 #endextend
 

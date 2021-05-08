@@ -70,8 +70,8 @@ enum GrantType: String, Codable {
     }
 }
 
-extension GrantType: CustomStringConvertible {
-    var description: String {
+extension GrantType {
+    var role: String {
         switch self {
         case .owner:
             return "Owner"
@@ -132,5 +132,26 @@ extension Grant {
 
     var short: Short {
         Short(self)
+    }
+}
+
+struct Member: Content {
+    let user: User.Short
+    let grant: GrantType
+    let role: String
+
+    init(_ grant: Grant) {
+        self.user = grant.user.short
+        self.grant = grant.type
+        self.role = grant.type.role
+    }
+}
+
+extension Member: Decodable {
+    init(from decoder: Decoder) throws {
+        let container = try decoder.singleValueContainer()
+        user = try container.decode(User.Short.self)
+        grant = try container.decode(GrantType.self)
+        role = grant.role
     }
 }

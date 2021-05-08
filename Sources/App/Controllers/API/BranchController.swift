@@ -22,7 +22,7 @@ struct BranchController {
             .canView()
 
         let branches = allowedProject
-            .flatMap { project -> EventLoopFuture<[Branch.Short]> in
+            .flatMap { project, _ -> EventLoopFuture<[Branch.Short]> in
                 return project.$branches.query(on: req.db)
                     .all()
                     .map { $0.map { $0.short }}
@@ -89,7 +89,7 @@ struct BranchController {
             .branch(by: params.branch, on: req.db)
 
         return branch
-            .flatMapThrowing { _, branch -> EventLoopFuture<Void> in
+            .flatMapThrowing { _, _, branch -> EventLoopFuture<Void> in
                 let filePath = URL(fileURLWithPath: "./builds/\(params.project)/\(branch.tag)/\(branch.filename)")
                 try FileManager.default.removeItem(at: filePath)
 
@@ -152,7 +152,7 @@ struct BranchController {
                 let fileSize = Int(attr?[FileAttributeKey.size] as? UInt64 ?? 0)
 
                 let queryResult = allowedProject
-                    .flatMap { project -> EventLoopFuture<(Project, Branch?)> in
+                    .flatMap { project, _ -> EventLoopFuture<(Project, Branch?)> in
                         return project.$branches.query(on: req.db)
                             .filter(\.$tag == params.branch)
                             .first()

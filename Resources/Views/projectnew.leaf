@@ -1,0 +1,53 @@
+#extend("base"):
+    #export("body"):
+
+    <div class="card shadow-sm mb-2" >
+        <div class="card-header">
+            <h5 class="m-0 col d-flex align-items-center">#(title)</p>
+        </div>
+        <div class="card-body">
+            <form class="row g-3" action="/projects/new" method="post">
+                <div class="col-md-6">
+                    <label for="inputBranch" class="form-label">Project Name</label>
+                    <input type="text" name="name" id="inputName" class="form-control #if(invalidName):is-invalid#endif" value="#(projectName)" autofocus placeholder="MYAPP" required>
+                    #if(invalidName):
+                    <div class="invalid-feedback">
+                        Please provide project name. Name must be 4 to 16 characters long.
+                    </div>
+                    #else:
+                    <div id="passHelp" class="form-text">Name is used as identifier and as part of project url, like http://distr.app/projects/MYAPP. Name must be 4 to 16 characters long.</div>
+                    #endif
+                </div>
+                <div class="col-md-6">
+                    <label for="inputTitle" class="form-label">Project Title</label>
+                    <input type="text" class="form-control #if(invalidTitle):is-invalid#endif" name="title" id="inputTitle" value="#(projectTitle)" placeholder="My Fancy App" required>
+                    #if(invalidTitle):
+                    <div class="invalid-feedback">
+                        Please provide project title.
+                    </div>
+                    #endif
+                </div>
+                <div class="col-md-6">
+                    <label for="inputBundleId" class="form-label">App bundleId</label>
+                    <input type="text" class="form-control #if(invalidBundle):is-invalid#endif" name="bundle_id" id="inputBundleId" value="#(projectBundle)" placeholder="com.example.myApp" required>
+                    #if(invalidBundle):
+                    <div class="invalid-feedback">
+                        Please provide valid application bundle id.
+                    </div>
+                    #endif
+                </div>
+                <div class="col-md-6">
+                    <label for="inputDescription" class="form-label">Project Description</label>
+                    <input type="text" class="form-control" name="description" id="inputDescription" value="#(projectDescription)" placeholder="Optional Description">
+                </div>
+
+                <div class="col-12">
+                    <button class="btn btn-primary" type="submit">Create</button>
+                </div>
+            </form>
+        </div>
+    </div>
+
+    #endexport
+#endextend
+

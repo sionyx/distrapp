@@ -87,7 +87,7 @@ struct ProjectsController {
 
 
         return project
-            .flatMapThrowing {project -> EventLoopFuture<Void> in
+            .flatMapThrowing {project, _ -> EventLoopFuture<Void> in
                 project.title = params.title?.nonEmptyValue ?? project.title
                 project.bundleId = params.bundleId?.nonEmptyValue ?? project.bundleId
                 project.description = params.description ?? project.description
@@ -119,7 +119,7 @@ struct ProjectsController {
             .canDelete()
 
         return ownedProject
-            .flatMap { project -> EventLoopFuture<Void> in
+            .flatMap { project, _ -> EventLoopFuture<Void> in
                 return req.db.transaction { database in
                     return Grant.query(on: database)
                         .filter(\Grant.$project.$id == project.id!)

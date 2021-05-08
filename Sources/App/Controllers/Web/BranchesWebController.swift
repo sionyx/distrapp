@@ -21,15 +21,19 @@ struct BranchesWebController {
             .by(name: project, on: req.db)
             .granted(to: currentUserId, on: req.db)
             .canView()
-            .flatMap { project -> EventLoopFuture<(Project.Short, [Branch.Short])> in
+            .flatMap { project, grants -> EventLoopFuture<(Project.Short, GrantType, [Branch.Short])> in
                 return project.$branches.query(on: req.db)
                     .all()
-                    .map { (project.short, $0.map { $0.short }) }
+                    .map { (project.short, grants, $0.map { $0.short }) }
             }
-            .flatMap { project, branches in
+            .flatMap { project, grants, branches in
                 req.view.render("branches", BranchesContent(user: currentUser.short,
                                                             project: project,
-                                                            branches: branches))
+                                                            branches: branches,
+                                                            canInvite: grants.canInvite,
+                                                            canEdit: grants.canEdit,
+                                                            canDelete: grants.canDelete,
+                                                            canUpload: grants.canUpload))
             }
     }
 
@@ -103,7 +107,7 @@ struct BranchesWebController {
             .granted(to: currentUserId, on: req.db)
             .canUpload()
             .branchOrNot(by: params.branch, on: req.db)
-            .flatMap { project, branch -> EventLoopFuture<(Project, String, Branch?)> in
+            .flatMap { project, _, branch -> EventLoopFuture<(Project, String, Branch?)> in
                 let dirPath = URL(fileURLWithPath: "./builds/\(project.name)/\(params.branch)")
                 print("dir path: \(dirPath.absoluteString)")
                 try? FileManager.default.createDirectory(atPath: dirPath.path, withIntermediateDirectories: true, attributes: nil)
@@ -154,6 +158,10 @@ struct BranchesContent: WebSiteContent {
     let user: User.Short?
     let project: Project.Short
     let branches: [Branch.Short]
+    let canInvite: Bool?
+    let canEdit: Bool?
+    let canDelete: Bool?
+    let canUpload: Bool?
 }
 
 struct BranchContent: WebSiteContent {

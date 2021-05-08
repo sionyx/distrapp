@@ -6,7 +6,7 @@
                 <h5 class="m-0 col d-flex align-items-center">
                     Projects
                 </h5>
-                <a href="#" class="btn btn-primary col-auto">
+                <a href="/projects/new" class="btn btn-primary col-auto">
                     New Project
                 </a>
             </div>
@@ -21,7 +21,7 @@
                     <p class="col d-flex align-items-center m-0">
                         #(project.title)
                     </p>
-                    <p class="col-md-auto d-flex align-items-center m-0"><small>Role: #(project.grant)</small></p>
+                    <p class="col-md-auto d-flex align-items-center m-0"><small>Role: #(project.role)</small></p>
                 </div>
             </a>
             #endfor

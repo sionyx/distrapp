@@ -1,0 +1,91 @@
+#extend("base"):
+    #export("body"):
+
+    <!-- Branches -->
+    <div class="card shadow-sm mb-2" >
+        <div class="card-header">
+            <div class="row">
+                <h5 class="m-0 col d-flex align-items-center">
+                    #(project.name) Members
+                </h5>
+                <div class="col-auto">
+                <form class="row" action="/projects/#(project.name)/invite" method="post">
+                    <div class="col-auto ps-0 pe-1">
+                        <input type="email" class="form-control#if(invalidEmail): is-invalid#endif" id="inputEmail" name="email" value="#(inviteEmail)" aria-describedby="emailHelp" placeholder="email" required>
+                    </div>
+                    <div class="col-auto ps-0 pe-1">
+                        <select id="selectRole" class="form-select col-auto" name="grant">
+                            <option value="upload">Developer</option>
+                            <option value="test">Tester</option>
+                            <option value="view">User</option>
+                        </select>
+                    </div>
+                    <div class="col-auto ps-0 pe-1 me-2">
+                        <button type="submit" class="btn btn-primary col-auto">Invite</button>
+                    </div>
+                </form>
+                </div>
+            </div>
+        </div>
+        <div class="list-group list-group-flush">
+            #for(member in members):
+            <div class="list-group-item">
+                <div class="row">
+                    <div class="col-auto">
+                        <img src="https://filin.mail.ru/pic?email=#(member.user.id)&width=90&height=90&name=#(member.user.first_name)%20#(member.user.last_name)" class="rounded-circle border" style="width:45px;height:45mipx;object-fit:cover;">
+                    </div>
+                    <div class="col">
+                            <p class="m-0">#(member.user.first_name) #(member.user.last_name)</p>
+                            <p class="m-0 small text-muted">#(member.role)</p>
+                    </div>
+                    <div class="col-auto">
+                        #if(member.grant != "owner"):
+                        <button type="button" class="btn btn-outline-danger" data-bs-toggle="modal" data-bs-target="\#deleteModal" data-bs-name="#(member.user.first_name) #(member.user.last_name)" data-bs-email="#(member.user.id)">Remove</button>
+                        #endif
+                    </div>
+                </div>
+            </div>
+            #endfor
+        </div>
+    </div>
+
+    <!-- Modal -->
+    <div class="modal fade" id="deleteModal" tabindex="-1" aria-labelledby="deleteModalLabel" aria-hidden="true">
+        <div class="modal-dialog">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <h5 class="modal-title" id="deleteModalLabel">Remove Member</h5>
+                    <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+                </div>
+            <div class="modal-body">
+                <p class="card-text">Are you sure to remove member?</p>
+            </div>
+            <div class="modal-footer">
+                <form action="/projects/#(project.name)/remove" method="post">
+                    <input type="hidden" id="userId" name="email" value="">
+                    <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Close</button>
+                    <button type="submit" class="btn btn-danger">Remove</button>
+                </form>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        var deleteModal = document.getElementById('deleteModal')
+        deleteModal.addEventListener('show.bs.modal', function (event) {
+          var button = event.relatedTarget
+          var email = button.getAttribute('data-bs-email')
+          var name = button.getAttribute('data-bs-name')
+
+          var modalBody = deleteModal.querySelector('.card-text')
+          var modalInput = deleteModal.querySelector('.modal-footer input')
+
+          modalBody.textContent = 'Are you sure to remove ' + name + '?'
+          modalInput.value = email
+        })
+    </script>
+
+    #endexport
+#endextend
+
+
