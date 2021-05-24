@@ -1,73 +1,120 @@
 #extend("base"):
     #export("body"):
-        <div class="card shadow-sm" >
-            <div class="card-header">
-                <div class="row">
-                    <div class="col-md-auto">
-                        <img src="#if(project.icon):#(project.icon)#else:/images/emptyapp.png#endif" class="img-thumbnail" style="width:64px;height:64px;object-fit:cover;">
+    <div class="container px-0 mb-2">
+        <div class="row gx-2">
+
+            <div class="col pt-2">
+                <div class="card shadow-sm" >
+                    <div class="card-header">
+                        <div class="row">
+                            <div class="col-md-auto">
+                                <img src="#if(project.icon):#(project.icon)#else:/images/emptyapp.png#endif" class="img-thumbnail" style="width:64px;height:64px;object-fit:cover;">
+                            </div>
+                            <div class="col align-items-center">
+                                <h5 class="card-title">#(branch.tag)
+                                    #if(branch.is_protected):
+                                    <span class="d-inline-block" tabindex="0" data-bs-toggle="tooltip" data-bs-placement="bottom" title="Protected Branch">
+                                        <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" fill="currentColor" class="bi bi-shield-lock-fill text-primary" viewBox="0 0 16 16">
+                                          <path fill-rule="evenodd" d="M8 0c-.69 0-1.843.265-2.928.56-1.11.3-2.229.655-2.887.87a1.54 1.54 0 0 0-1.044 1.262c-.596 4.477.787 7.795 2.465 9.99a11.777 11.777 0 0 0 2.517 2.453c.386.273.744.482 1.048.625.28.132.581.24.829.24s.548-.108.829-.24a7.159 7.159 0 0 0 1.048-.625 11.775 11.775 0 0 0 2.517-2.453c1.678-2.195 3.061-5.513 2.465-9.99a1.541 1.541 0 0 0-1.044-1.263 62.467 62.467 0 0 0-2.887-.87C9.843.266 8.69 0 8 0zm0 5a1.5 1.5 0 0 1 .5 2.915l.385 1.99a.5.5 0 0 1-.491.595h-.788a.5.5 0 0 1-.49-.595l.384-1.99A1.5 1.5 0 0 1 8 5z"/>
+                                        </svg>
+                                    </span>
+                                    #endif
+                                </h5>
+                                <h6 class="card-subtitle mb-2 text-muted">#(project.title)</h6>
+                            </div>
+                        </div>
                     </div>
-                    <div class="col align-items-center">
-                        <h5 class="card-title">#(branch.tag)</h5>
-                        <h6 class="card-subtitle mb-2 text-muted">#(project.title)</h6>
-                    </div>
+                    <ul class="list-group list-group-flush">
+                        #if(branch.description):
+                        <li class="list-group-item">#(branch.description)</li>
+                        #endif
+                        <li class="list-group-item">
+                            <p class="mb-0">Build: #(branch.build_number)</p>
+                            <p class="my-0">Created: #date(branch.created, "yyyy-MM-dd hh:mm")</p>
+                            <p class="my-0">Updated: #date(branch.updated, "yyyy-MM-dd hh:mm")</p>
+                            <p class="my-0">Size: #(branch.size)</p>
+                            #if(branch.is_tested):
+                            <p class="my-0 text-success">Tested
+                                <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" fill="currentColor" class="bi bi-check-circle-fill" viewBox="0 0 16 16">
+                                    <path d="M16 8A8 8 0 1 1 0 8a8 8 0 0 1 16 0zm-3.97-3.03a.75.75 0 0 0-1.08.022L7.477 9.417 5.384 7.323a.75.75 0 0 0-1.06 1.06L6.97 11.03a.75.75 0 0 0 1.079-.02l3.992-4.99a.75.75 0 0 0-.01-1.05z"/>
+                                </svg>
+                            </p>
+                            #else:
+                            <p class="my-0 text-danger">Not Tested
+                                <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" fill="currentColor" class="bi bi-circle" viewBox="0 0 16 16">
+                                    <path d="M8 15A7 7 0 1 1 8 1a7 7 0 0 1 0 14zm0 1A8 8 0 1 0 8 0a8 8 0 0 0 0 16z"/>
+                                </svg>
+                            </p>
+                            #endif
+                        </li>
+                    </ul>
                 </div>
             </div>
 
-            <ul class="list-group list-group-flush">
-                #if(branch.description):
-                <li class="list-group-item">#(branch.description)</li>
-                #endif
-                <li class="list-group-item">
-                    <p class="mb-0">Build: #(branch.build_number)</p>
-                    <p class="my-0">Created: #date(branch.created, "yyyy-MM-dd hh:mm")</p>
-                    <p class="my-0">Updated: #date(branch.updated, "yyyy-MM-dd hh:mm")</p>
-                    <p class="my-0">Size: #(branch.size)</p>
-                    #if(branch.is_tested):
-                    <p class="my-0 text-success">Tested
-                        <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" fill="currentColor" class="bi bi-check-circle-fill" viewBox="0 0 16 16">
-                            <path d="M16 8A8 8 0 1 1 0 8a8 8 0 0 1 16 0zm-3.97-3.03a.75.75 0 0 0-1.08.022L7.477 9.417 5.384 7.323a.75.75 0 0 0-1.06 1.06L6.97 11.03a.75.75 0 0 0 1.079-.02l3.992-4.99a.75.75 0 0 0-.01-1.05z"/>
-                        </svg>
-                    </p>
-                    #else:
-                    <p class="my-0 text-danger">Not Tested
-                        <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" fill="currentColor" class="bi bi-circle" viewBox="0 0 16 16">
-                            <path d="M8 15A7 7 0 1 1 8 1a7 7 0 0 1 0 14zm0 1A8 8 0 1 0 8 0a8 8 0 0 0 0 16z"/>
-                        </svg>
-                    </p>
-                    #endif
-                </li>
-                #if(installUrl || canTest):
-                <li class="list-group-item">
-                    <div class="row row-cols-1 row-cols-md-4">
-                    #if(installUrl):
-                        <div class="col d-grid">
-                            <a href="#(installUrl)" class="btn btn-primary my-1">Install</a>
-                        </div>
-                    #endif
-                    #if(canTest):
-                        #if(branch.is_tested):
-                        <div class="col d-grid">
-                            <a href="#" class="btn btn-outline-danger my-1">Mark Not Tested</a>
-                        </div>
-                        #else:
+            #if(installUrl || canTest || canUpload || canProtect):
+            <div class="col-md-auto pt-2">
+                <div class="card shadow-sm h-100" >
+                    <div class="card-body">
                         <div class="d-grid gap-2">
-                            <a href="#" class="btn btn-success mb-1 mt-1">Mark Tested</a>
-                        </div>
+                        #if(installUrl):
+                        <a href="#(installUrl)" class="btn btn-primary my-1">Install</a>
                         #endif
-                    #endif
-                    #if(canUpload):
-                        <div class="col d-grid">
-                            <a href="/projects/#(project.name)/#(branch.tag)/upload" class="btn btn-primary my-1">Upload</a>
-                        </div>
-                        #if(!branch.is_protected):
-                        <!-- div class="col d-grid">
-                            <a href="/projects/#(project.name)/#(branch.tag)/delete" class="btn btn-danger my-1">Delete</a>
-                        </div -->
+                        #if(!branch.is_protected && canTest):
+                            #if(branch.is_tested):
+                            <form action="/projects/#(project.name)/#(branch.tag)/nottested" method="post">
+                                <button type="submit" class="btn btn-outline-danger my-1 w-100">Mark Not Tested</button>
+                            </form>
+                            #else:
+                            <form action="/projects/#(project.name)/#(branch.tag)/tested" method="post">
+                                <button type="submit" class="btn btn-outline-success mb-1 mt-1 w-100">Mark Tested</button>
+                            </form>
+                            #endif
                         #endif
-                    #endif
-                </li>
-                #endif
-            </ul>
+                        #if(canProtect):
+                            #if(branch.is_protected):
+                            <form action="/projects/#(project.name)/#(branch.tag)/unprotect" method="post">
+                                <button type="submit" class="btn btn-outline-danger my-1 w-100">Unprotect</button>
+                            </form>
+                            #else:
+                            <form action="/projects/#(project.name)/#(branch.tag)/protect" method="post">
+                                <button type="submit" class="btn btn-outline-success mb-1 mt-1 w-100">Protect</button>
+                            </form>
+                            #endif
+                        #endif
+                        #if(canUpload):
+                        <a href="/projects/#(project.name)/#(branch.tag)/upload" class="btn btn-primary my-1">Update</a>
+                        #endif
+                        #if(!branch.is_protected && canUpload):
+                        <a href="/projects/#(project.name)/#(branch.tag)/delete" class="btn btn-outline-danger" data-bs-toggle="modal" data-bs-target="\#deleteModal">Delete</a>
+                        #endif
+                        </div>
+                    </div>
+                </div>
+            </div>
+            #endif
+
         </div>
+    </div>
+
+
+    <!-- Modal -->
+    <div class="modal fade" id="deleteModal" tabindex="-1" aria-labelledby="deleteModalLabel" aria-hidden="true">
+        <div class="modal-dialog">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <h5 class="modal-title" id="deleteModalLabel">Delete Branch</h5>
+                    <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+                </div>
+            <div class="modal-body">
+                <p class="card-text">Are you sure to delete branch #(branch.tag)?</p>
+            </div>
+            <div class="modal-footer">
+                <form action="/projects/#(project.name)/#(branch.tag)/delete" method="post">
+                    <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Close</button>
+                    <button type="submit" class="btn btn-danger">Delete</button>
+                </form>
+            </div>
+        </div>
+    </div>
     #endexport
 #endextend

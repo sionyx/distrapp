@@ -23,6 +23,8 @@ struct BranchesWebController {
             .canView()
             .flatMap { project, grants -> EventLoopFuture<(Project.Short, GrantType, [Branch.Short])> in
                 return project.$branches.query(on: req.db)
+                    .sort(\.$isProtected, .descending)
+                    .sort(\.$updated, .descending)
                     .all()
                     .map { (project.short, grants, $0.map { $0.short }) }
             }
@@ -150,6 +152,131 @@ struct BranchesWebController {
                 return brunchToSave.save(on: req.db)
             }
             .transform(to: req.redirect(to: "/projects/\(project)/\(params.branch)"))
+    }
+
+    func protectDoneHandler(_ req: Request) throws -> EventLoopFuture<Response> {
+        guard let currentUser = try? req.auth.require(User.self),
+              let currentUserId = currentUser.id else {
+            throw Abort(.unauthorized)
+        }
+
+        guard let project = req.parameters.get("project"),
+              let tag = req.parameters.get("branch") else {
+            throw Abort(.badRequest)
+        }
+
+        return Project
+            .by(name: project, on: req.db)
+            .granted(to: currentUserId, on: req.db)
+            .canProtect()
+            .branch(by: tag, on: req.db)
+            .flatMapThrowing { _, _, branch -> EventLoopFuture<Void> in
+                branch.isProtected = true
+                return branch.save(on: req.db)
+            }
+            .transform(to: req.redirect(to: "/projects/\(project)/\(tag)"))
+    }
+
+    func unprotectDoneHandler(_ req: Request) throws -> EventLoopFuture<Response> {
+        guard let currentUser = try? req.auth.require(User.self),
+              let currentUserId = currentUser.id else {
+            throw Abort(.unauthorized)
+        }
+
+        guard let project = req.parameters.get("project"),
+              let tag = req.parameters.get("branch") else {
+            throw Abort(.badRequest)
+        }
+
+        return Project
+            .by(name: project, on: req.db)
+            .granted(to: currentUserId, on: req.db)
+            .canProtect()
+            .branch(by: tag, on: req.db)
+            .flatMapThrowing { _, _, branch -> EventLoopFuture<Void> in
+                branch.isProtected = false
+                return branch.save(on: req.db)
+            }
+            .transform(to: req.redirect(to: "/projects/\(project)/\(tag)"))
+    }
+
+    func markTestedDoneHandler(_ req: Request) throws -> EventLoopFuture<Response> {
+        guard let currentUser = try? req.auth.require(User.self),
+              let currentUserId = currentUser.id else {
+            throw Abort(.unauthorized)
+        }
+
+        guard let project = req.parameters.get("project"),
+              let tag = req.parameters.get("branch") else {
+            throw Abort(.badRequest)
+        }
+
+        return Project
+            .by(name: project, on: req.db)
+            .granted(to: currentUserId, on: req.db)
+            .canTest()
+            .branch(by: tag, on: req.db)
+            .flatMapThrowing { _, _, branch -> EventLoopFuture<Void> in
+                branch.isTested = true
+                return branch.save(on: req.db)
+            }
+            .transform(to: req.redirect(to: "/projects/\(project)/\(tag)"))
+    }
+
+    func unmarkTestedDoneHandler(_ req: Request) throws -> EventLoopFuture<Response> {
+        guard let currentUser = try? req.auth.require(User.self),
+              let currentUserId = currentUser.id else {
+            throw Abort(.unauthorized)
+        }
+
+        guard let project = req.parameters.get("project"),
+              let tag = req.parameters.get("branch") else {
+            throw Abort(.badRequest)
+        }
+
+        return Project
+            .by(name: project, on: req.db)
+            .granted(to: currentUserId, on: req.db)
+            .canTest()
+            .branch(by: tag, on: req.db)
+            .flatMapThrowing { _, _, branch -> EventLoopFuture<Void> in
+                branch.isTested = false
+                return branch.save(on: req.db)
+            }
+            .transform(to: req.redirect(to: "/projects/\(project)/\(tag)"))
+    }
+
+    func deleteDoneHandler(_ req: Request) throws -> EventLoopFuture<Response> {
+        guard let currentUser = try? req.auth.require(User.self),
+              let currentUserId = currentUser.id else {
+            throw Abort(.unauthorized)
+        }
+
+        guard let project = req.parameters.get("project"),
+              let tag = req.parameters.get("branch") else {
+            throw Abort(.badRequest)
+        }
+
+        let allowedProject = Project
+            .by(name: project, on: req.db)
+            .granted(to: currentUserId, on: req.db)
+            .canUpload()
+
+        let branch = allowedProject
+            .branch(by: tag, on: req.db)
+
+        return branch
+            .guard({ !$0.2.isProtected }, else: Abort(.forbidden, reason: "Couldn't Delete Protected Branch"))
+            .flatMapThrowing { _, _, branch -> EventLoopFuture<Void> in
+                let filePath = URL(fileURLWithPath: "./builds/\(project)/\(tag)/\(branch.filename)")
+                try FileManager.default.removeItem(at: filePath)
+
+                let dirPath = URL(fileURLWithPath: "./builds/\(project)/\(tag)")
+                try FileManager.default.removeItem(at: dirPath)
+
+                return branch.delete(on: req.db)
+            }
+            .transform(to: req.redirect(to: "/projects/\(project)"))
     }
 }
 

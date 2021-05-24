@@ -117,6 +117,11 @@ func sessionRoutes(_ builder: RoutesBuilder) {
     builder.on(.GET, "projects", ":project", "upload", use: Controllers.Web.branchesController.uploadHandler)
     builder.on(.GET, "projects", ":project", ":branch", "upload", use: Controllers.Web.branchesController.uploadHandler)
     builder.on(.POST, "projects", ":project", "upload", use: Controllers.Web.branchesController.uploadDoneHandler)
+    builder.on(.POST, "projects", ":project", ":branch", "protect", use: Controllers.Web.branchesController.protectDoneHandler)
+    builder.on(.POST, "projects", ":project", ":branch", "tested", use: Controllers.Web.branchesController.markTestedDoneHandler)
+    builder.on(.POST, "projects", ":project", ":branch", "nottested", use: Controllers.Web.branchesController.unmarkTestedDoneHandler)
+    builder.on(.POST, "projects", ":project", ":branch", "unprotect", use: Controllers.Web.branchesController.unprotectDoneHandler)
+    builder.on(.POST, "projects", ":project", ":branch", "delete", use: Controllers.Web.branchesController.deleteDoneHandler)
 }
 
 

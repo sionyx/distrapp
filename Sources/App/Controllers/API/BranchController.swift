@@ -83,12 +83,13 @@ struct BranchController {
         let allowedProject = Project
             .by(name: params.project, on: req.db)
             .granted(to: currentUserId, on: req.db)
-            .canView()
+            .canUpload()
 
         let branch = allowedProject
             .branch(by: params.branch, on: req.db)
 
         return branch
+            .guard({ !$0.2.isProtected }, else: Abort(.forbidden, reason: "Couldn't Delete Protected Branch"))
             .flatMapThrowing { _, _, branch -> EventLoopFuture<Void> in
                 let filePath = URL(fileURLWithPath: "./builds/\(params.project)/\(branch.tag)/\(branch.filename)")
                 try FileManager.default.removeItem(at: filePath)
