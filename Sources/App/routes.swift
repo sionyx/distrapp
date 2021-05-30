@@ -99,6 +99,8 @@ func sessionRoutes(_ builder: RoutesBuilder) {
     builder.on(.GET, "profile", use: Controllers.Web.profileController.profileHandler)
     builder.on(.GET, "changepassword", use: Controllers.Web.profileController.changePasswordHandler)
     builder.on(.POST, "changepassword", use: Controllers.Web.profileController.changePasswordDoneHandler)
+    builder.on(.POST, "profile", "tokens", "create", use: Controllers.Web.profileController.createTokenDoneHandler)
+    builder.on(.POST, "profile", "tokens", "revoke", use: Controllers.Web.profileController.revokeTokenDoneHandler)
 
     builder.on(.GET, "projects", use: Controllers.Web.projectsController.projectsHandler)
     builder.on(.GET, "projects", ":project", use: Controllers.Web.branchesController.branchesHandler)

@@ -4,14 +4,14 @@ info:
   description: |
     Welcome to disr.app!
 
-    * Open chat with `@distrappbot` in MyTeam, click Start. Your account will be created.
-    * Get one time code by `/auth/getcode` request. Code will be sent by MyTeam bot.
-    * Get bearer token by `/auth/gettoken` request.
+    * Register on distr.app website.
+    * Create new API Token on Profile page.
     * Use token in swagger by pressing `Authorize` button.
     * Create new project with `/projects` post request.
     * Upload build with `/upload` post request.
-    * Install build to device by open link `https://distr.app/install/{projectname}/{branchname}` (i.e. https://distr.app/install/MYFANCYPROJECT/MYFANCYPROJECT-123)
-    *  Have fun =)
+    * Open build page by open link `https://distr.app/projects/{projectname}/{branchname}` (i.e. https://distr.app/projects/MYFANCYPROJECT/MYFANCYPROJECT-123)
+    * Or Install build directry to device by open link `https://distr.app/install/{projectname}/{branchname}` (i.e. https://distr.app/install/MYFANCYPROJECT/MYFANCYPROJECT-123)
+    * Have fun =)
   version: 0.1 beta
 servers:
 - url: https://distr.app/api/v1
@@ -26,69 +26,6 @@ tags:
   description: Add, list and remove users from projets
 
 paths:
-  /auth/getcode:
-    get:
-      tags:
-      - Auth
-      summary: Get auth code
-      operationId: getAuthCode
-      parameters:
-      - name: email
-        in: query
-        description: email of user to be authorized
-        required: true
-        schema:
-          type: string
-      responses:
-        200:
-          description: successful operation
-        400:
-          description: Invalid email
-  /auth/gettoken:
-    get:
-      tags:
-      - Auth
-      summary: Get token by code
-      operationId: getAuthToken
-      parameters:
-      - name: email
-        in: query
-        description: email of user to be authorized
-        required: true
-        schema:
-          type: string
-      - name: code
-        in: query
-        description: code received by getcode request
-        required: true
-        schema:
-          type: string
-      - name: place
-        in: query
-        description: place where you are going to use token, i.e. 'ci', 'bot', 'myapp'
-        required: true
-        schema:
-          type: string
-      responses:
-        200:
-          description: successful operation
-          content:
-            application/json:
-              schema:
-                $ref: '#/components/schemas/UserToken'
-        400:
-          description: Invalid parameters or code is out of date
-          content:
-            application/json:
-              schema:
-                $ref: '#/components/schemas/ErrorResponse'
-        404:
-          description: User with specified email is not found
-          content:
-            application/json:
-              schema:
-                $ref: '#/components/schemas/ErrorResponse'
-
   /projects:
     post:
       tags:
@@ -495,15 +432,6 @@ paths:
 
 components:
   schemas:
-    UserToken:
-      type: object
-      properties:
-        token:
-          type: string
-          example: C4E8A1A9B37B3AF01FE14DB35E5E0B003B7EAF8A9268A18C9A82ED418888BB00
-        place:
-          type: string
-          example: ci-bot
     NewProject:
       type: object
       required:  # List the required properties here

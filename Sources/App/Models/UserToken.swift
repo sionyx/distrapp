@@ -62,3 +62,25 @@ extension UserToken {
         Short(self)
     }
 }
+
+extension UserToken {
+    struct Secure: Content {
+        let id: String
+        let full: String?
+        let token: String
+        let place: String
+
+        fileprivate init?(_ userToken: UserToken) {
+            guard let id = userToken.id?.uuidString,
+                  let created = userToken.created else { return nil }
+            self.id = id
+            self.full = Date().timeIntervalSince(created) < 300 ? userToken.value : nil
+            self.token = "\(userToken.value.prefix(4))...\(userToken.value.suffix(4))"
+            self.place = userToken.place
+        }
+    }
+
+    var secure: Secure? {
+        Secure(self)
+    }
+}

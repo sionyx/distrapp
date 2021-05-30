@@ -11,11 +11,19 @@ import Fluent
 
 struct ProfileWebController {
     func profileHandler(_ req: Request) throws -> EventLoopFuture<View> {
-        guard let user = try? req.auth.require(User.self) else {
+        guard let currentUser = try? req.auth.require(User.self),
+              let currentUserId = currentUser.id else {
             throw Abort(.unauthorized)
         }
 
-        return req.view.render("profile", ProfileContent(user: user.short))
+        return UserToken.query(on: req.db)
+            .filter(\.$user.$id == currentUserId)
+            .all()
+            .mapEachCompact { $0.secure }
+            .flatMap { tokens in
+                req.view.render("profile", ProfileContent(user: currentUser.short,
+                                                          tokens: tokens))
+            }
     }
 
 
@@ -170,7 +178,51 @@ struct ProfileWebController {
         req.session.destroy()
         return req.redirect(to: "/")
     }
+
+
+    // MARK: Tokens
+    func createTokenDoneHandler(_ req: Request) throws -> EventLoopFuture<Response> {
+        guard let user = try? req.auth.require(User.self) else {
+            throw Abort(.unauthorized)
+        }
+
+        guard let params = try? req.content.decode(CreateTokenParams.self),
+              params.place.count >= 3 else {
+            throw Abort(.badRequest, reason: "Token must be at least 3 characters long")
+        }
+
+        guard let userToken = try? user.generateToken(place: params.place) else {
+            throw Abort(.internalServerError, reason: "Token Cannot Be Generated")
+        }
+
+        return userToken
+            .save(on: req.db)
+            .transform(to: req.redirect(to: "/profile"))
+    }
+
+    func revokeTokenDoneHandler(_ req: Request) throws -> EventLoopFuture<Response> {
+        guard let user = try? req.auth.require(User.self) else {
+            throw Abort(.unauthorized)
+        }
+
+        guard let params = try? req.content.decode(RevokeTokenParams.self),
+              let tokenId = UUID(uuidString: params.token) else {
+            throw Abort(.badRequest)
+        }
+
+        return UserToken.query(on: req.db)
+            .filter(\.$id == tokenId)
+            .with(\.$user)
+            .first()
+            .unwrap(or: Abort(.badRequest, reason: "Token Not Found"))
+            .guard( { $0.user.id == user.id }, else: Abort(.badRequest, reason: "Invalis User Token"))
+            .flatMap { token in
+                token.delete(force: true, on: req.db)
+            }
+            .transform(to: req.redirect(to: "/profile"))
+    }
 }
+
 
 struct LoginContent: WebSiteContent {
     var title = "Login"
@@ -196,6 +248,7 @@ struct SignupContent: WebSiteContent {
 struct ProfileContent: WebSiteContent {
     var title = "Profile"
     let user: User.Short?
+    let tokens: [UserToken.Secure]
 }
 
 struct ChangePasswordContent: WebSiteContent {
@@ -224,4 +277,12 @@ struct SignupParams: Content {
     let lastName: String
     let email: String
     let password: String
+}
+
+struct CreateTokenParams: Content {
+    let place: String
+}
+
+struct RevokeTokenParams: Content {
+    let token: String
 }
