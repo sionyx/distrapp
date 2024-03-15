@@ -7,7 +7,6 @@
 
 import Vapor
 import Fluent
-import Queues
 
 extension MyTeam {
     class PingHandler: MyTeamHandler {
